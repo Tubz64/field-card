@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Field Card — Pet Vaccination Wallet</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEE9DC; --ink:#22301F; --moss:#3F5344; --moss-dk:#2B3B2C;
+  --sand:#DCD3B9; --line:#C9BE9E; --amber:#B7822E; --rust:#A24632; --good:#4C6B3E;
+  --card:#F7F4EA;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#1B211A; --ink:#E9E4D6; --moss:#6E8C63; --moss-dk:#9FB893;
+    --sand:#3A4433; --line:#48523F; --amber:#D9A552; --rust:#D98466; --good:#8FBF7C;
+    --card:#232B20;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1B211A; --ink:#E9E4D6; --moss:#6E8C63; --moss-dk:#9FB893;
+  --sand:#3A4433; --line:#48523F; --amber:#D9A552; --rust:#D98466; --good:#8FBF7C;
+  --card:#232B20;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);} 
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;min-height:100%;}
+.serif{font-family:'Fraunces',serif;}
+header{padding:28px 20px 16px;border-bottom:2px solid var(--line);}
+header h1{font-family:'Fraunces',serif;font-weight:700;font-size:28px;margin:0 0 4px;letter-spacing:-.01em;}
+header p{margin:0;color:var(--moss-dk);opacity:.75;font-size:14px;}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 60px;}
+.petbar{display:flex;gap:8px;overflow-x:auto;padding:16px 0;border-bottom:1px solid var(--line);}
+.pet-chip{flex:0 0 auto;padding:8px 16px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-size:14px;font-weight:500;white-space:nowrap;}
+.pet-chip.active{background:var(--moss);border-color:var(--moss);color:#fff;}
+.add-pet{flex:0 0 auto;padding:8px 16px;border-radius:20px;border:1.5px dashed var(--moss-dk);background:transparent;color:var(--moss-dk);cursor:pointer;font-size:14px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-top:20px;}
+.profile-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.profile-row h2{font-family:'Fraunces',serif;font-size:22px;margin:0 0 4px;}
+.meta{font-size:13px;color:var(--moss-dk);opacity:.8;line-height:1.6;}
+.status-badge{padding:4px 10px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;}
+.badge-good{background:#DDE6D3;color:var(--good);}
+.badge-amber{background:#F1DFB9;color:var(--amber);}
+.badge-red{background:#EFD2C6;color:var(--rust);}
+.badge-none{background:var(--sand);color:var(--moss-dk);}
+h3.section{font-family:'Fraunces',serif;font-size:16px;margin:28px 0 10px;color:var(--moss-dk);}
+.vax-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px;}
+.vax-item:last-child{border-bottom:none;}
+.vax-name{font-weight:600;font-size:14.5px;}
+.vax-sub{font-size:12.5px;color:var(--moss-dk);opacity:.75;margin-top:2px;}
+.dot-row{display:flex;align-items:center;gap:10px;}
+button.link{background:none;border:none;color:var(--rust);font-size:12px;cursor:pointer;padding:4px;opacity:.6;}
+button.link:hover{opacity:1;}
+.btn{background:var(--moss);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn:hover{background:var(--moss-dk);}
+.btn-ghost{background:transparent;border:1.5px solid var(--moss);color:var(--moss-dk);}
+form.inline{display:grid;gap:10px;margin-top:14px;}
+form.inline.two{grid-template-columns:1fr 1fr;}
+label{font-size:12px;font-weight:600;color:var(--moss-dk);display:block;margin-bottom:4px;}
+input,select{width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:6px;font-family:'Inter',sans-serif;font-size:14px;background:var(--card);color:var(--ink);}
+.empty{text-align:center;padding:40px 20px;color:var(--moss-dk);opacity:.7;}
+.empty .serif{font-size:18px;display:block;margin-bottom:6px;}
+.remind-list .vax-item{cursor:default;}
+.form-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
+.chip-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;flex:0 0 auto;}
+.chip-initial{width:22px;height:22px;border-radius:50%;background:var(--sand);color:var(--moss-dk);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.pet-chip{display:inline-flex;align-items:center;gap:7px;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--line);}
+.profile-avatar-fallback{width:64px;height:64px;border-radius:50%;background:var(--sand);color:var(--moss-dk);font-family:'Fraunces',serif;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.profile-row{gap:16px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,24,17,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+.modal-card{width:100%;max-width:420px;margin:0;max-height:88vh;overflow-y:auto;}
+.avatar-upload{display:flex;justify-content:center;margin-bottom:6px;}
+.avatar-circle{width:88px;height:88px;border-radius:50%;border:2px dashed var(--line);background:var(--sand);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;}
+.avatar-circle img{width:100%;height:100%;object-fit:cover;display:none;}
+.avatar-circle .avatar-plus{font-size:26px;color:var(--moss-dk);}
+.species-row{display:flex;gap:8px;margin-bottom:2px;}
+.species-opt{flex:1;text-align:center;padding:8px 4px;border:1.5px solid var(--line);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;background:var(--card);}
+.species-opt.active{background:var(--moss);border-color:var(--moss);color:#fff;}
+@media(max-width:480px){form.inline.two{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header><div class="wrap" style="padding:0;">
+  <h1>Field Card</h1>
+  <p>Your pets' vaccination records, in your pocket.</p>
+</div></header>
+
+<div class="wrap">
+  <div class="petbar" id="petbar"></div>
+  <div id="content"></div>
+</div>
+
+<script>
+const STORE_KEY = 'field-card-pets-v1';
+let state = { pets: [], activeId: null };
+
+function load(){
+  try{ const raw = localStorage.getItem(STORE_KEY); if(raw) state = JSON.parse(raw); }catch(e){ console.error('load failed', e); }
+}
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){ console.error('save failed', e); }
+}
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function statusFor(v){
+  if(!v.expires) return {cls:'badge-none', label:'No expiry set'};
+  const days = Math.ceil((new Date(v.expires) - new Date())/86400000);
+  if(days < 0) return {cls:'badge-red', label:'Expired'};
+  if(days <= 30) return {cls:'badge-amber', label: days+'d left'};
+  return {cls:'badge-good', label:'Valid'};
+}
+
+function overallStatus(pet){
+  if(!pet.vaccines.length) return {cls:'badge-none', label:'No records'};
+  const worst = pet.vaccines.reduce((acc,v)=>{
+    const s = statusFor(v);
+    const rank = {'badge-red':0,'badge-amber':1,'badge-none':2,'badge-good':3};
+    return rank[s.cls] < rank[acc.cls] ? s : acc;
+  }, {cls:'badge-good', label:'Valid'});
+  if(worst.cls==='badge-good') return {cls:'badge-good', label:'Up to date'};
+  if(worst.cls==='badge-amber') return {cls:'badge-amber', label:'Due soon'};
+  if(worst.cls==='badge-red') return {cls:'badge-red', label:'Overdue'};
+  return worst;
+}
+
+function render(){
+  const bar = document.getElementById('petbar');
+  bar.innerHTML = '';
+  state.pets.forEach(p=>{
+    const chip = document.createElement('button');
+    chip.className = 'pet-chip' + (p.id===state.activeId?' active':'');
+    const avatar = p.photo
+      ? `<img class="chip-avatar" src="${p.photo}" alt="">`
+      : `<span class="chip-initial">${escapeHtml((p.name||'?').slice(0,1).toUpperCase())}</span>`;
+    chip.innerHTML = avatar + escapeHtml(p.name || 'Unnamed');
+    chip.onclick = ()=>{ state.activeId = p.id; save(); render(); };
+    bar.appendChild(chip);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-pet';
+  addBtn.textContent = '+ Add pet';
+  addBtn.onclick = showAddPet;
+  bar.appendChild(addBtn);
+
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  if(!state.pets.length){
+    content.innerHTML = '<div class="card empty"><span class="serif">No pets yet</span>Add your first pet to start keeping their vaccination record.</div>';
+    return;
+  }
+  const pet = state.pets.find(p=>p.id===state.activeId) || state.pets[0];
+  state.activeId = pet.id;
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  const os = overallStatus(pet);
+  card.innerHTML = `
+    <div class="profile-row">
+      ${pet.photo
+        ? `<img class="profile-avatar" src="${pet.photo}" alt="">`
+        : `<div class="profile-avatar-fallback">${escapeHtml((pet.name||'?').slice(0,1).toUpperCase())}</div>`}
+      <div style="flex:1;">
+        <h2>${escapeHtml(pet.name)}</h2>
+        <div class="meta">${escapeHtml(pet.species||'Pet')}${pet.breed? ' · '+escapeHtml(pet.breed):''} · Microchip: ${escapeHtml(pet.chip||'—')}${pet.dob? ' · Born '+formatDate(pet.dob):''}</div>
+      </div>
+      <span class="status-badge ${os.cls}">${os.label}</span>
+    </div>
+    <h3 class="section">Vaccinations</h3>
+    <div id="vaxList"></div>
+    <div class="form-actions">
+      <button class="btn" id="addVaxBtn">+ Add vaccination</button>
+      <button class="btn btn-ghost" id="editPetBtn">Edit pet</button>
+    </div>
+    <div id="vaxForm"></div>
+  `;
+  content.appendChild(card);
+
+  const remindCard = document.createElement('div');
+  remindCard.className = 'card remind-list';
+  const upcoming = pet.vaccines
+    .filter(v=>v.expires)
+    .map(v=>({...v, s: statusFor(v)}))
+    .filter(v=>v.s.cls==='badge-amber'||v.s.cls==='badge-red')
+    .sort((a,b)=> new Date(a.expires) - new Date(b.expires));
+  remindCard.innerHTML = `<h3 class="section" style="margin-top:0;">Reminders</h3>` +
+    (upcoming.length
+      ? upcoming.map(v=>`<div class="vax-item"><div><div class="vax-name">${escapeHtml(v.type)}</div><div class="vax-sub">Due ${formatDate(v.expires)}</div></div><span class="status-badge ${v.s.cls}">${v.s.label}</span></div>`).join('')
+      : '<div class="meta">Nothing due soon — you\'re all caught up.</div>');
+  content.appendChild(remindCard);
+
+  const vaxList = card.querySelector('#vaxList');
+  if(!pet.vaccines.length){
+    vaxList.innerHTML = '<div class="meta">No vaccinations recorded yet.</div>';
+  } else {
+    vaxList.innerHTML = pet.vaccines
+      .slice().sort((a,b)=> (b.given||'').localeCompare(a.given||''))
+      .map(v=>{
+        const s = statusFor(v);
+        return `<div class="vax-item">
+          <div><div class="vax-name">${escapeHtml(v.type)}</div>
+          <div class="vax-sub">Given ${formatDate(v.given)}${v.vet? ' · '+escapeHtml(v.vet):''}${v.expires? ' · expires '+formatDate(v.expires):''}</div></div>
+          <div class="dot-row"><span class="status-badge ${s.cls}">${s.label}</span>
+          <button class="link" data-id="${v.id}">remove</button></div>
+        </div>`;
+      }).join('');
+    vaxList.querySelectorAll('.link').forEach(btn=>{
+      btn.onclick = ()=>{
+        pet.vaccines = pet.vaccines.filter(v=>v.id!==btn.dataset.id);
+        save(); render();
+      };
+    });
+  }
+
+  card.querySelector('#addVaxBtn').onclick = ()=> showVaxForm(card, pet);
+  card.querySelector('#editPetBtn').onclick = ()=> showEditPet(card, pet);
+}
+
+function showVaxForm(card, pet){
+  const holder = card.querySelector('#vaxForm');
+  holder.innerHTML = `
+    <h3 class="section">New vaccination</h3>
+    <form class="inline two" id="vf">
+      <div><label>Vaccine</label><input name="type" list="vaxTypes" placeholder="e.g. Rabies" required></div>
+      <div><label>Vet / clinic</label><input name="vet" placeholder="Optional"></div>
+      <div><label>Date given</label><input name="given" type="date" required></div>
+      <div><label>Expires / due</label><input name="expires" type="date"></div>
+      <datalist id="vaxTypes">
+        <option value="Rabies"><option value="DHPP (Distemper/Parvo)"><option value="Leptospirosis">
+        <option value="Kennel cough (Bordetella)"><option value="Booster">
+      </datalist>
+      <div class="form-actions" style="grid-column:1/-1;">
+        <button class="btn" type="submit">Save</button>
+        <button class="btn btn-ghost" type="button" id="cancelVf">Cancel</button>
+      </div>
+    </form>`;
+  holder.querySelector('#cancelVf').onclick = ()=>{ holder.innerHTML=''; };
+  holder.querySelector('#vf').onsubmit = (e)=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    pet.vaccines.push({ id: uid(), type: f.get('type'), vet: f.get('vet'), given: f.get('given'), expires: f.get('expires') });
+    save(); render();
+  };
+}
+
+const SPECIES = ['Dog','Cat','Rabbit','Other'];
+
+function showEditPet(card, pet){ openPetModal(pet); }
+function showAddPet(){ openPetModal(null); }
+
+function openPetModal(pet){
+  const isNew = !pet;
+  const draft = { photo: pet?.photo || null, species: pet?.species || 'Dog' };
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-card card">
+      <h3 class="section" style="margin-top:0;">${isNew? 'Add pet' : 'Edit pet'}</h3>
+      <form class="inline" id="petForm">
+        <div class="avatar-upload">
+          <label class="avatar-circle" id="avatarCircle">
+            <img id="avatarPreview" src="${draft.photo||''}" style="${draft.photo?'display:block;':''}" alt="">
+            <span class="avatar-plus" id="avatarPlus" style="${draft.photo?'display:none;':''}">+</span>
+            <input type="file" accept="image/*" id="photoInput" style="display:none;">
+          </label>
+        </div>
+        <div><label>Species</label>
+          <div class="species-row" id="speciesRow">
+            ${SPECIES.map(s=>`<div class="species-opt${s===draft.species?' active':''}" data-species="${s}">${s}</div>`).join('')}
+          </div>
+        </div>
+        <div><label>Name</label><input name="name" value="${escapeAttr(pet?.name||'')}" required></div>
+        <div class="inline two">
+          <div><label>Breed</label><input name="breed" value="${escapeAttr(pet?.breed||'')}"></div>
+          <div><label>Date of birth</label><input name="dob" type="date" value="${escapeAttr(pet?.dob||'')}"></div>
+        </div>
+        <div><label>Microchip number</label><input name="chip" value="${escapeAttr(pet?.chip||'')}" placeholder="e.g. 933012400146699" inputmode="numeric" maxlength="15" pattern="\d{15}" title="15-digit microchip number"></div>
+        <div class="form-actions">
+          <button class="btn" type="submit">Save</button>
+          ${!isNew? '<button class="btn btn-ghost" type="button" id="delPet">Remove pet</button>' : ''}
+          <button class="btn btn-ghost" type="button" id="cancelModal">Cancel</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#speciesRow').onclick = (e)=>{
+    const opt = e.target.closest('.species-opt');
+    if(!opt) return;
+    overlay.querySelectorAll('.species-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    draft.species = opt.dataset.species;
+  };
+
+  overlay.querySelector('#avatarCircle').addEventListener('click', (e)=>{ if(e.target.tagName!=='INPUT') overlay.querySelector('#photoInput').click(); });
+  overlay.querySelector('#photoInput').onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    resizeImage(file, 240, (dataUrl)=>{
+      draft.photo = dataUrl;
+      const img = overlay.querySelector('#avatarPreview');
+      img.src = dataUrl; img.style.display = 'block';
+      overlay.querySelector('#avatarPlus').style.display = 'none';
+    });
+  };
+
+  overlay.querySelector('#cancelModal').onclick = ()=> overlay.remove();
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+
+  if(!isNew){
+    overlay.querySelector('#delPet').onclick = ()=>{
+      if(confirm('Remove '+pet.name+' and all their records?')){
+        state.pets = state.pets.filter(p=>p.id!==pet.id);
+        state.activeId = state.pets[0]?.id || null;
+        save(); overlay.remove(); render();
+      }
+    };
+  }
+
+  overlay.querySelector('#petForm').onsubmit = (e)=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    if(isNew){
+      const newPet = { id: uid(), name: f.get('name'), species: draft.species, breed: f.get('breed'),
+        dob: f.get('dob'), chip: f.get('chip'), photo: draft.photo, vaccines: [] };
+      state.pets.push(newPet);
+      state.activeId = newPet.id;
+    } else {
+      pet.name = f.get('name'); pet.species = draft.species; pet.breed = f.get('breed');
+      pet.dob = f.get('dob'); pet.chip = f.get('chip'); pet.photo = draft.photo;
+    }
+    save(); overlay.remove(); render();
+  };
+}
+
+function resizeImage(file, maxDim, cb){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let {width, height} = img;
+      if(width > height){ if(width > maxDim){ height *= maxDim/width; width = maxDim; } }
+      else { if(height > maxDim){ width *= maxDim/height; height = maxDim; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      cb(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = e.target.result;
+  };
+  reader.onerror = ()=> console.error('image read failed');
+  reader.readAsDataURL(file);
+}
+
+function formatDate(d){ if(!d) return '—'; const dt = new Date(d); return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+load();
+if(!state.activeId && state.pets.length) state.activeId = state.pets[0].id;
+render();
+</script>
+</body>
+</html>
