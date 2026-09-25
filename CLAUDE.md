@@ -45,10 +45,20 @@ Decisions:
     `pawpers-gha-deploy` (GitHub environments only). The OIDC provider is
     account-wide — other projects should reference it with a data source,
     not create another. Everything else goes through CI.
-  - GitHub Actions (repo: github.com/Tubz64/field-card): on PR → fmt,
-    validate, lint, tests, `terraform plan`; on merge to `master` → build
-    Lambdas (esbuild) and `terraform apply` to `dev`. `prod` later, gated by
-    a manual approval.
+  - **Branch flow:** `feat/*` → `development` → `production` → `master`.
+    | Branch | Role | Deploys to |
+    |---|---|---|
+    | `feat/*` | short-lived work; PR into `development` | — |
+    | `development` | integration | `dev` env, automatically on push |
+    | `production` | release; PR from `development` | `prod` env, after required reviewer approval |
+    | `master` | source of truth for what is live; never deployed from | — |
+    Always branch new work from `development`, not `master`.
+  - GitHub Actions (repo: github.com/Tubz64/field-card): every PR → fmt,
+    validate, lint, tests, and `terraform plan` against the target branch's
+    environment (PR into `development` → plan `dev`; into `production` →
+    plan `prod`). Push to `development`/`production` → build Lambdas
+    (esbuild) and `terraform apply` to that environment. GitHub environments
+    are locked to their branch (`dev` ← `development`, `prod` ← `production`).
   - AWS access from CI via GitHub OIDC → IAM role only.
   - Mobile: EAS Build / EAS Update driven from CI once the app exists.
 - Planned layout: `app/` (Expo), `backend/` (Lambda TypeScript source),
