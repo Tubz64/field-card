@@ -1,7 +1,7 @@
 # infra/bootstrap
 
-One-time setup, applied by hand with your own AWS credentials. It creates the
-pieces that CI needs before CI can run:
+One-time setup, applied by hand with your own AWS credentials and a GitHub
+token (see step 3). It creates the pieces that CI needs before CI can run:
 
 | Resource | Name |
 |---|---|
@@ -10,6 +10,7 @@ pieces that CI needs before CI can run:
 | CI plan role: `ReadOnlyAccess` + state read/lock; PRs and `master` | `pawpers-gha-plan` |
 | CI deploy role: `PowerUserAccess` + IAM scoped to `pawpers-*`; GitHub environments `dev`/`prod` only | `pawpers-gha-deploy` |
 | Monthly cost budget with email alerts (optional) | `pawpers-monthly` |
+| GitHub environments, branch rulesets, Actions variables | see step 3 |
 
 After this, all other infrastructure is deployed by GitHub Actions.
 
@@ -36,23 +37,27 @@ rm terraform.tfstate terraform.tfstate.backup
 terraform plan                  # should report no changes
 ```
 
-## 3. Configure GitHub
+## 3. GitHub settings
 
-Create the environments and store the role ARNs as repo variables. These
-are variables, not secrets, because none of the values are sensitive:
+The same config manages the repo settings CI depends on (`github.tf`), so
+applying it keeps them in sync. Nothing is set by hand in the GitHub UI.
+
+| Setting | Value |
+|---|---|
+| Environments | `dev` deployable only from `development`; `prod` only from `production`, with the repo owner as required reviewer |
+| Branch rulesets | `development` / `production`: PR required, no force-push or delete, checks `fmt / validate / lint` and `plan (<env>)` must pass |
+| Actions variables (not secrets; none are sensitive) | `AWS_REGION`, `TF_STATE_BUCKET`, `AWS_PLAN_ROLE_ARN`, `AWS_DEPLOY_ROLE_ARN` |
+
+The GitHub provider reads a token with admin rights on the repo from
+`GITHUB_TOKEN`, so set it before any plan or apply here:
 
 ```bash
-REPO=Tubz64/field-card
-gh api -X PUT repos/$REPO/environments/dev
-gh api -X PUT repos/$REPO/environments/prod
-gh variable set AWS_REGION          -R $REPO -b "$(terraform output -raw region)"
-gh variable set TF_STATE_BUCKET     -R $REPO -b "$(terraform output -raw state_bucket)"
-gh variable set AWS_PLAN_ROLE_ARN   -R $REPO -b "$(terraform output -raw plan_role_arn)"
-gh variable set AWS_DEPLOY_ROLE_ARN -R $REPO -b "$(terraform output -raw deploy_role_arn)"
+export GITHUB_TOKEN=$(gh auth token)   # PowerShell: $env:GITHUB_TOKEN = gh auth token
 ```
 
-Then add required reviewers to the `prod` environment in the repo settings
-(Settings → Environments → prod).
+The `development` and `production` branches must already exist.
+`imports.tf` adopted settings that were first created by hand; delete it
+once applied.
 
 ## Notes
 
