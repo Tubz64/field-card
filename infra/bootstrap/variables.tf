@@ -22,6 +22,18 @@ variable "github_repo" {
   default     = "Tubz64/field-card"
 }
 
+variable "github_owner_id" {
+  description = "Numeric ID of the GitHub repo owner (part of the immutable OIDC subject)."
+  type        = string
+  default     = "32686116"
+}
+
+variable "github_repo_id" {
+  description = "Numeric ID of the GitHub repo (part of the immutable OIDC subject)."
+  type        = string
+  default     = "1383652361"
+}
+
 variable "github_default_branch" {
   description = "Branch whose pushes may assume the plan role (PRs always can)."
   type        = string
