@@ -6,7 +6,17 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.66"
     }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.13"
+    }
   }
+}
+
+# Token comes from GITHUB_TOKEN.
+provider "github" {
+  owner = split("/", var.github_repo)[0]
 }
 
 provider "aws" {

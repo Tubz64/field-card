@@ -46,6 +46,12 @@ variable "deploy_environments" {
   default     = ["dev", "prod"]
 }
 
+variable "approval_environments" {
+  description = "GitHub environments whose deployments wait for approval from the repo owner."
+  type        = list(string)
+  default     = ["prod"]
+}
+
 variable "monthly_budget_usd" {
   description = "Monthly AWS cost budget for alerting, in USD."
   type        = number

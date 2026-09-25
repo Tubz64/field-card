@@ -81,6 +81,10 @@ Decisions:
 - `.github/workflows/deploy.yml`: push to `development`/`production` → plan +
   apply with `pawpers-gha-deploy` inside the `dev`/`prod` GitHub environment.
 - `.github/dependabot.yml`: monthly grouped bump PRs into `development`.
+- GitHub repo settings (environments + branch locks + prod reviewer, branch
+  rulesets, Actions variables) are Terraform in `infra/bootstrap/github.tf`,
+  not click-ops. Required check names there must match the job names in
+  `pr.yml`; rename both together.
 - Tool versions are pinned in the workflows' `env:` (`TF_VERSION`,
   `TFLINT_VERSION`); bump them together with `required_version`.
 
