@@ -81,6 +81,17 @@ Decisions:
 - `.github/workflows/deploy.yml`: push to `development`/`production` → plan +
   apply with `pawpers-gha-deploy` inside the `dev`/`prod` GitHub environment.
 - `.github/dependabot.yml`: monthly grouped bump PRs into `development`.
+- `infra/modules/{auth,database,photos}`: Cognito (email sign-in, public
+  SRP client, no secret), DynamoDB single table `pawpers-<env>`
+  (`PK=USER#<sub>`, `SK=PET#<id>` / `PET#<id>#VAX#<id>`), private photos
+  bucket (keys `users/<sub>/...`, presigned URLs only). Per-env differences
+  are the `locals` in `envs/<env>/main.tf`: prod is invite-only and
+  deletion-protected. See `infra/README.md`.
+- Pets carry `photoUpdatedAt` (set by the API on upload) so the app can
+  remind owners to refresh old photos, e.g. a puppy photo at ~1 year old.
+- Cost: keep everything on free/AWS-owned options (Cognito Essentials,
+  on-demand DynamoDB, SSE-S3/AWS-owned keys, no customer KMS keys) so an
+  idle prod costs ~£0. Prod is promoted from development at milestones.
 - GitHub repo settings (environments + branch locks + prod reviewer, branch
   rulesets, Actions variables) are Terraform in `infra/bootstrap/github.tf`,
   not click-ops. Required check names there must match the job names in
