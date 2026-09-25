@@ -1,12 +1,29 @@
 locals {
   name_prefix = "${var.project}-${var.environment}"
+
+  # The only per-environment differences.
+  self_signup_enabled = false # false = invite-only (see infra/README.md)
+  protect_data        = true  # deletion protection on; buckets keep photos on destroy
 }
 
-# Placeholder that proves the CI plan/apply path end-to-end. Cognito,
-# DynamoDB, S3 and the API are added here as module calls from ../../modules.
-resource "aws_ssm_parameter" "environment" {
-  name        = "/${var.project}/${var.environment}/environment"
-  description = "Environment marker for ${local.name_prefix}, managed by Terraform."
-  type        = "String"
-  value       = var.environment
+module "auth" {
+  source = "../../modules/auth"
+
+  name_prefix         = local.name_prefix
+  self_signup_enabled = local.self_signup_enabled
+  deletion_protection = local.protect_data
+}
+
+module "database" {
+  source = "../../modules/database"
+
+  name_prefix         = local.name_prefix
+  deletion_protection = local.protect_data
+}
+
+module "photos" {
+  source = "../../modules/photos"
+
+  name_prefix   = local.name_prefix
+  force_destroy = !local.protect_data
 }
