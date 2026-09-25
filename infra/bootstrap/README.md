@@ -51,6 +51,19 @@ gh variable set AWS_PLAN_ROLE_ARN   -R $REPO -b "$(terraform output -raw plan_ro
 gh variable set AWS_DEPLOY_ROLE_ARN -R $REPO -b "$(terraform output -raw deploy_role_arn)"
 ```
 
+Lock each environment to its branch, so only `development` can deploy to
+`dev` and only `production` can deploy to `prod`:
+
+```bash
+for pair in dev:development prod:production; do
+  env=${pair%%:*}; branch=${pair#*:}
+  gh api -X PUT repos/$REPO/environments/$env --input - <<EOF
+{"deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
+EOF
+  gh api -X POST repos/$REPO/environments/$env/deployment-branch-policies -f name=$branch -f type=branch
+done
+```
+
 Then add required reviewers to the `prod` environment in the repo settings
 (Settings → Environments → prod).
 
