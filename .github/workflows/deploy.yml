@@ -1,0 +1,63 @@
+name: Deploy
+
+# development -> dev (automatic), production -> prod (gated by the prod
+# environment's required reviewers). master is never deployed from.
+on:
+  push:
+    branches: [development, production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: 1.16.4
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  deploy:
+    name: apply (${{ github.ref_name == 'production' && 'prod' || 'dev' }})
+    # Stop a manual dispatch from a feature branch deploying to dev.
+    if: github.ref_name == 'development' || github.ref_name == 'production'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'production' && 'prod' || 'dev' }}
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TF_ENV: ${{ github.ref_name == 'production' && 'prod' || 'dev' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-deploy-${{ github.run_id }}
+
+      - name: terraform init
+        run: terraform -chdir="infra/envs/$TF_ENV" init
+
+      - name: terraform plan
+        run: terraform -chdir="infra/envs/$TF_ENV" plan -lock-timeout=5m -out=tfplan
+
+      - name: Plan summary
+        run: |
+          {
+            echo "### Terraform plan: \`$TF_ENV\`"
+            echo '```'
+            terraform -chdir="infra/envs/$TF_ENV" show -no-color tfplan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: terraform apply
+        run: terraform -chdir="infra/envs/$TF_ENV" apply -lock-timeout=5m tfplan

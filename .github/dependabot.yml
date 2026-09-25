@@ -1,0 +1,23 @@
+# Opens PRs into development when pinned versions fall behind, so bumps are
+# deliberate (reviewed + planned) rather than silent.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: development
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: terraform
+    directories:
+      - /infra/bootstrap
+      - /infra/envs/*
+    target-branch: development
+    schedule:
+      interval: monthly
+    groups:
+      terraform:
+        patterns: ["*"]

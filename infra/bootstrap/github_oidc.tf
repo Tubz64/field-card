@@ -11,6 +11,15 @@ resource "aws_iam_openid_connect_provider" "github" {
 locals {
   oidc_sub = "token.actions.githubusercontent.com:sub"
   oidc_aud = "token.actions.githubusercontent.com:aud"
+
+  # The repo uses GitHub's immutable OIDC subject format, which embeds the
+  # owner and repo IDs: repo:<owner>@<owner_id>/<repo>@<repo_id>:<context>.
+  # Check with: gh api repos/<owner>/<repo>/actions/oidc/customization/sub
+  oidc_sub_prefix = format(
+    "repo:%s@%s/%s@%s",
+    split("/", var.github_repo)[0], var.github_owner_id,
+    split("/", var.github_repo)[1], var.github_repo_id,
+  )
 }
 
 # ---------------------------------------------------------------------------
@@ -36,8 +45,8 @@ data "aws_iam_policy_document" "plan_trust" {
       test     = "StringEquals"
       variable = local.oidc_sub
       values = [
-        "repo:${var.github_repo}:pull_request",
-        "repo:${var.github_repo}:ref:refs/heads/${var.github_default_branch}",
+        "${local.oidc_sub_prefix}:pull_request",
+        "${local.oidc_sub_prefix}:ref:refs/heads/${var.github_default_branch}",
       ]
     }
   }
@@ -106,7 +115,7 @@ data "aws_iam_policy_document" "deploy_trust" {
     condition {
       test     = "StringEquals"
       variable = local.oidc_sub
-      values   = [for env in var.deploy_environments : "repo:${var.github_repo}:environment:${env}"]
+      values   = [for env in var.deploy_environments : "${local.oidc_sub_prefix}:environment:${env}"]
     }
   }
 }

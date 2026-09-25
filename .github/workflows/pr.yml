@@ -1,0 +1,133 @@
+name: PR checks
+
+# PRs into development plan against dev; PRs into production plan against prod.
+on:
+  pull_request:
+    branches: [development, production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  TF_VERSION: 1.16.4
+  TFLINT_VERSION: v0.64.0
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  checks:
+    name: fmt / validate / lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff infra
+
+      - name: terraform validate
+        run: |
+          for dir in infra/bootstrap infra/envs/*/; do
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done
+
+      - uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # avoids rate limits downloading plugins
+        run: |
+          tflint --init --config "$GITHUB_WORKSPACE/.tflint.hcl"
+          tflint --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" --format compact
+
+  plan:
+    name: plan (${{ github.base_ref == 'production' && 'prod' || 'dev' }})
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    env:
+      TF_ENV: ${{ github.base_ref == 'production' && 'prod' || 'dev' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      # No `environment:` on this job: the plan role trusts the pull_request
+      # subject, and binding an environment would change the OIDC subject.
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-plan-pr${{ github.event.pull_request.number }}
+
+      - name: terraform init
+        run: terraform -chdir="infra/envs/$TF_ENV" init
+
+      - name: terraform plan
+        id: plan
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          terraform -chdir="infra/envs/$TF_ENV" plan -no-color -lock-timeout=5m -out=tfplan 2>&1 | tee plan.txt
+
+      - name: Comment plan on PR
+        uses: actions/github-script@v9
+        env:
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const env = process.env.TF_ENV;
+            const marker = `<!-- pawpers-plan:${env} -->`;
+            const max = 60000;
+            let plan = fs.existsSync('plan.txt') ? fs.readFileSync('plan.txt', 'utf8') : '(no output)';
+            if (plan.length > max) plan = '…(truncated, see the workflow log)\n' + plan.slice(-max);
+            const ok = process.env.PLAN_OUTCOME === 'success';
+            const summary = (plan.match(/^(Plan:.*|No changes\..*)$/m) || [ok ? 'Plan succeeded' : 'Plan failed'])[0];
+            const body = [
+              marker,
+              `### ${ok ? '✅' : '❌'} Terraform plan: \`${env}\``,
+              `**${summary}**`,
+              '',
+              '<details><summary>Show plan</summary>',
+              '',
+              '```',
+              plan,
+              '```',
+              '</details>',
+              '',
+              `_Commit ${context.payload.pull_request.head.sha.slice(0, 7)} · [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`,
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome != 'success'
+        run: exit 1

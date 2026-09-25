@@ -22,6 +22,18 @@ variable "github_repo" {
   default     = "Tubz64/field-card"
 }
 
+variable "github_owner_id" {
+  description = "Numeric ID of the GitHub repo owner (part of the immutable OIDC subject)."
+  type        = string
+  default     = "32686116"
+}
+
+variable "github_repo_id" {
+  description = "Numeric ID of the GitHub repo (part of the immutable OIDC subject)."
+  type        = string
+  default     = "1383652361"
+}
+
 variable "github_default_branch" {
   description = "Branch whose pushes may assume the plan role (PRs always can)."
   type        = string
@@ -32,6 +44,12 @@ variable "deploy_environments" {
   description = "GitHub environments whose jobs may assume the deploy role."
   type        = list(string)
   default     = ["dev", "prod"]
+}
+
+variable "approval_environments" {
+  description = "GitHub environments whose deployments wait for approval from the repo owner."
+  type        = list(string)
+  default     = ["prod"]
 }
 
 variable "monthly_budget_usd" {
