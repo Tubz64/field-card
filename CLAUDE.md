@@ -68,6 +68,22 @@ Decisions:
   (Fraunces + Inter) in the app.
 - No existing user data to migrate: prototype localStorage held test data only.
 
+## Infra & CI (built)
+- `infra/envs/{dev,prod}`: per-env Terraform roots, state at
+  `envs/<env>/terraform.tfstate` in the state bucket. Terraform `~> 1.16`
+  (bootstrap stays on `~> 1.14`), AWS provider `~> 6.66`. Provider lock
+  files include linux/windows/darwin hashes; after changing providers run
+  `terraform providers lock -platform=linux_amd64 -platform=windows_amd64 -platform=darwin_arm64 -platform=darwin_amd64`.
+- `.github/workflows/pr.yml`: fmt, validate, tflint (`.tflint.hcl` at the
+  root), then plan with `pawpers-gha-plan` and a sticky PR comment. The plan
+  job must NOT set `environment:` (it would change the OIDC subject the plan
+  role trusts).
+- `.github/workflows/deploy.yml`: push to `development`/`production` → plan +
+  apply with `pawpers-gha-deploy` inside the `dev`/`prod` GitHub environment.
+- `.github/dependabot.yml`: monthly grouped bump PRs into `development`.
+- Tool versions are pinned in the workflows' `env:` (`TF_VERSION`,
+  `TFLINT_VERSION`); bump them together with `required_version`.
+
 ## Prototype stack (index.html)
 Single self-contained `index.html` file. No build step, no framework, no
 dependencies except two Google Fonts loaded via CDN link tag (Fraunces for
