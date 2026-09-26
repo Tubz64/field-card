@@ -56,8 +56,6 @@ export GITHUB_TOKEN=$(gh auth token)   # PowerShell: $env:GITHUB_TOKEN = gh auth
 ```
 
 The `development` and `production` branches must already exist.
-`imports.tf` adopted settings that were first created by hand; delete it
-once applied.
 
 ## Notes
 
