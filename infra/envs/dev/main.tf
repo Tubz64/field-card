@@ -27,3 +27,19 @@ module "photos" {
   name_prefix   = local.name_prefix
   force_destroy = !local.protect_data
 }
+
+module "api" {
+  source = "../../modules/api"
+
+  name_prefix = local.name_prefix
+  # Built by `npm run build` in backend/ (CI runs it before plan/apply).
+  source_dir = "${path.root}/../../../backend/dist/api"
+  route_keys = jsondecode(file("${path.root}/../../../backend/src/api/routes.json"))
+
+  table_name         = module.database.table_name
+  table_arn          = module.database.table_arn
+  photos_bucket_name = module.photos.bucket_name
+  photos_bucket_arn  = module.photos.bucket_arn
+  user_pool_endpoint = module.auth.user_pool_endpoint
+  app_client_id      = module.auth.app_client_id
+}

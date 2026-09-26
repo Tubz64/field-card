@@ -6,6 +6,7 @@
 | `modules/auth` | Cognito user pool + Expo app client | via envs |
 | `modules/database` | DynamoDB single table (`PK`/`SK`) | via envs |
 | `modules/photos` | Private S3 bucket for pet photos | via envs |
+| `modules/api` | HTTP API (Cognito JWT authorizer, throttled) + the Node 24 Lambda from `backend/` | via envs |
 | `envs/dev`, `envs/prod` | Per-environment roots wiring the modules together | CI only |
 
 `development` deploys to `dev` on every merge. `production` deploys to `prod`

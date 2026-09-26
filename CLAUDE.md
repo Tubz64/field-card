@@ -87,6 +87,18 @@ Decisions:
   bucket (keys `users/<sub>/...`, presigned URLs only). Per-env differences
   are the `locals` in `envs/<env>/main.tf`: prod is invite-only and
   deletion-protected. See `infra/README.md`.
+- `backend/` (see its README for the route reference): one Node 24 / arm64
+  Lambda serving every route, bundled with esbuild to `dist/api/index.mjs`,
+  which Terraform zips (`archive_file`) in `infra/modules/api`. Route list
+  lives in `backend/src/api/routes.json`, read by both the handler and
+  Terraform, and a test keeps the handler map in sync. Validation with zod.
+  Tests use vitest + aws-sdk-client-mock. TypeScript is held at 6.0 until
+  typescript-eslint supports 7. Local dev needs Node 24.
+- CI builds the bundle before every plan/apply; required PR checks are
+  `fmt / validate / lint`, `backend: lint / typecheck / test`, `plan (<env>)`.
+- Photos: presigned POST (S3 enforces JPEG + 5 MB), then `PUT .../photo`
+  confirms, sets `photoUpdatedAt` and deletes the old object. Pet responses
+  carry a 1-hour presigned `photoUrl`; the app caches the image.
 - Pets carry `photoUpdatedAt` (set by the API on upload) so the app can
   remind owners to refresh old photos, e.g. a puppy photo at ~1 year old.
 - Cost: keep everything on free/AWS-owned options (Cognito Essentials,

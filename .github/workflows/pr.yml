@@ -15,10 +15,32 @@ concurrency:
 env:
   TF_VERSION: 1.16.4
   TFLINT_VERSION: v0.64.0
+  NODE_VERSION: 24 # match the Lambda runtime in infra/modules/api
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
 
 jobs:
+  backend:
+    name: "backend: lint / typecheck / test"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
   checks:
     name: fmt / validate / lint
     runs-on: ubuntu-latest
@@ -55,7 +77,7 @@ jobs:
 
   plan:
     name: plan (${{ github.base_ref == 'production' && 'prod' || 'dev' }})
-    needs: checks
+    needs: [checks, backend]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -65,6 +87,16 @@ jobs:
       TF_ENV: ${{ github.base_ref == 'production' && 'prod' || 'dev' }}
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Build Lambda bundles
+        working-directory: backend
+        run: npm ci && npm run build
 
       - uses: hashicorp/setup-terraform@v4
         with:

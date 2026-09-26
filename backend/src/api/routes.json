@@ -1,0 +1,13 @@
+[
+  "GET /pets",
+  "POST /pets",
+  "GET /pets/{petId}",
+  "PATCH /pets/{petId}",
+  "DELETE /pets/{petId}",
+  "POST /pets/{petId}/vaccinations",
+  "PATCH /pets/{petId}/vaccinations/{vaccinationId}",
+  "DELETE /pets/{petId}/vaccinations/{vaccinationId}",
+  "POST /pets/{petId}/photo/upload",
+  "PUT /pets/{petId}/photo",
+  "DELETE /pets/{petId}/photo"
+]

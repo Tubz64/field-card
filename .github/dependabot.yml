@@ -11,6 +11,15 @@ updates:
       actions:
         patterns: ["*"]
 
+  - package-ecosystem: npm
+    directory: /backend
+    target-branch: development
+    schedule:
+      interval: monthly
+    groups:
+      backend:
+        patterns: ["*"]
+
   - package-ecosystem: terraform
     directories:
       - /infra/bootstrap
