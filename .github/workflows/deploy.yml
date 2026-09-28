@@ -72,3 +72,11 @@ jobs:
 
       - name: terraform apply
         run: terraform -chdir="infra/envs/$TF_ENV" apply -lock-timeout=5m tfplan
+
+      # Exercises every route against the freshly deployed API with throwaway
+      # Cognito users (see backend/README.md). Fails the run if the API is
+      # broken. dev only: prod is invite-only and holds real data.
+      - name: End-to-end test
+        if: env.TF_ENV == 'dev'
+        working-directory: backend
+        run: npm run e2e
