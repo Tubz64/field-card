@@ -80,3 +80,17 @@ resource "aws_s3_bucket_policy" "this" {
 
   depends_on = [aws_s3_bucket_public_access_block.this]
 }
+
+# Only for Expo web on localhost: lets the browser POST uploads straight to
+# S3. Phone apps don't need it.
+resource "aws_s3_bucket_cors_configuration" "this" {
+  count  = length(var.cors_allow_origins) > 0 ? 1 : 0
+  bucket = aws_s3_bucket.this.id
+
+  cors_rule {
+    allowed_origins = var.cors_allow_origins
+    allowed_methods = ["GET", "POST"]
+    allowed_headers = ["*"]
+    max_age_seconds = 3600
+  }
+}

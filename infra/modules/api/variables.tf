@@ -39,6 +39,12 @@ variable "app_client_id" {
   type        = string
 }
 
+variable "cors_allow_origins" {
+  description = "Browser origins allowed to call the API (e.g. Expo web on localhost). Empty disables CORS."
+  type        = list(string)
+  default     = []
+}
+
 variable "log_retention_days" {
   type    = number
   default = 14

@@ -117,6 +117,18 @@ resource "aws_apigatewayv2_api" "this" {
   name          = local.function_name
   protocol_type = "HTTP"
   description   = "Pawpers REST API (${var.name_prefix})"
+
+  # Only for running the app in a browser (Expo web on localhost). The phone
+  # apps don't send Origin headers, so they don't need CORS.
+  dynamic "cors_configuration" {
+    for_each = length(var.cors_allow_origins) > 0 ? [1] : []
+    content {
+      allow_origins = var.cors_allow_origins
+      allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+      allow_headers = ["authorization", "content-type"]
+      max_age       = 3600
+    }
+  }
 }
 
 # Validates the Cognito token on every route before the Lambda runs. Accepts
