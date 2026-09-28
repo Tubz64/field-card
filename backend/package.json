@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "e2e": "node scripts/e2e.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1141.0",
@@ -21,9 +22,12 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@aws-sdk/client-apigatewayv2": "^3.1141.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1141.0",
     "@eslint/js": "^10.0.1",
     "@types/aws-lambda": "^8.10.163",
     "@types/node": "^24.0.0",
+    "amazon-cognito-identity-js": "^6.3.20",
     "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.11.0",

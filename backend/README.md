@@ -10,7 +10,21 @@ npm run check   # lint + typecheck + tests
 npm run build   # bundles to dist/api/index.mjs (Terraform zips this)
 ```
 
-Needs Node 24, the same version as the Lambda runtime.
+Needs Node 24 or newer (the Lambda runtime is 24).
+
+## End-to-end test (dev)
+
+```bash
+npm run e2e
+```
+
+Runs against the deployed `dev` stack using your local AWS credentials. It
+finds the user pool, app client and API by name, creates two throwaway
+Cognito users (no emails are sent), and signs in with SRP the way the app
+does. It then goes through every route: validation, cross-user isolation, a
+real S3 photo upload, download and size rejection, and cascade delete. The
+users and their data are always deleted afterwards, even on failure. It
+refuses to run against any environment other than `dev`.
 
 ## Auth
 
