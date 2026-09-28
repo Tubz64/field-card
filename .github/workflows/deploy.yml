@@ -12,6 +12,7 @@ permissions:
 
 env:
   TF_VERSION: 1.16.4
+  NODE_VERSION: 24 # match the Lambda runtime in infra/modules/api
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
 
@@ -32,6 +33,16 @@ jobs:
       TF_ENV: ${{ github.ref_name == 'production' && 'prod' || 'dev' }}
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Build Lambda bundles
+        working-directory: backend
+        run: npm ci && npm run build
 
       - uses: hashicorp/setup-terraform@v4
         with:

@@ -22,3 +22,7 @@ output "table_name" {
 output "photos_bucket" {
   value = module.photos.bucket_name
 }
+
+output "api_url" {
+  value = module.api.api_url
+}
