@@ -50,21 +50,31 @@ const vaccinationFields = {
   manufacturer: optionalText(80),
   lotNumber: optionalText(40),
   given: isoDate,
+  // Pet passport "valid from": for a first rabies vaccination, 21 days after
+  // it was given. Travel rules count from this date.
+  validFrom: optionalDate,
   expires: optionalDate,
 };
 
-const expiresAfterGiven = (v: { given?: string | null; expires?: string | null }) =>
-  !v.given || !v.expires || v.expires >= v.given;
+type VaccinationDates = { given?: string | null; validFrom?: string | null; expires?: string | null };
 
-export const createVaccinationSchema = z
-  .strictObject(vaccinationFields)
-  .refine(expiresAfterGiven, { message: 'Expiry must be on or after the date given', path: ['expires'] });
+const expiresAfterGiven = (v: VaccinationDates) => !v.given || !v.expires || v.expires >= v.given;
+const validFromInRange = (v: VaccinationDates) =>
+  !v.validFrom || ((!v.given || v.validFrom >= v.given) && (!v.expires || v.validFrom <= v.expires));
 
-export const updateVaccinationSchema = z
-  .strictObject(vaccinationFields)
-  .partial()
-  .refine((v) => Object.keys(v).length > 0, 'Nothing to update')
-  .refine(expiresAfterGiven, { message: 'Expiry must be on or after the date given', path: ['expires'] });
+const withDateRules = <T extends z.ZodType<VaccinationDates>>(schema: T) =>
+  schema
+    .refine(expiresAfterGiven, { message: 'Expiry must be on or after the date given', path: ['expires'] })
+    .refine(validFromInRange, { message: 'Valid from must be between the date given and the expiry', path: ['validFrom'] });
+
+export const createVaccinationSchema = withDateRules(z.strictObject(vaccinationFields));
+
+export const updateVaccinationSchema = withDateRules(
+  z
+    .strictObject(vaccinationFields)
+    .partial()
+    .refine((v) => Object.keys(v).length > 0, 'Nothing to update'),
+);
 
 export const confirmPhotoSchema = z.strictObject({ key: z.string().min(1).max(300) });
 

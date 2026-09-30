@@ -66,8 +66,16 @@ describe('vaccination schemas', () => {
       manufacturer: null,
       lotNumber: null,
       given: '2026-03-01',
+      validFrom: null,
       expires: null,
     });
+  });
+
+  it('requires valid-from to fall between the date given and the expiry', () => {
+    const base = { type: 'Rabies', given: '2026-03-01', expires: '2029-03-01' };
+    expect(createVaccinationSchema.safeParse({ ...base, validFrom: '2026-03-22' }).success).toBe(true);
+    expect(createVaccinationSchema.safeParse({ ...base, validFrom: '2026-02-01' }).success).toBe(false);
+    expect(createVaccinationSchema.safeParse({ ...base, validFrom: '2030-01-01' }).success).toBe(false);
   });
 
   it('keeps the manufacturer and lot number when given', () => {

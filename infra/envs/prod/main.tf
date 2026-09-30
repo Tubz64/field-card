@@ -42,6 +42,8 @@ module "api" {
   table_arn          = module.database.table_arn
   photos_bucket_name = module.photos.bucket_name
   photos_bucket_arn  = module.photos.bucket_arn
+  user_pool_id       = module.auth.user_pool_id
+  user_pool_arn      = module.auth.user_pool_arn
   user_pool_endpoint = module.auth.user_pool_endpoint
   app_client_id      = module.auth.app_client_id
   cors_allow_origins = local.web_dev_origins

@@ -126,7 +126,20 @@ Decisions:
   (`app/vendor/`), and ESLint for `eslint-plugin-expo`, so `npm ci` stays free
   of warnings. Don't "fix" these by overriding `query-string` to v9: it's
   default-export-only and breaks expo-router at runtime.
-- Expiry-reminder notifications are not built yet (next app milestone).
+- Expiry reminders: local notifications via `expo-notifications` (Expo Go
+  OK; push would need a dev build). Reminders at 30 days, 7 days and on the
+  day, 9am, for the latest vaccination per type, capped at 60 (iOS limit
+  64). Resynced whenever the pet list changes (home screen), cancelled on
+  sign-out, and can be turned off in Profile. No web support.
+- Profile screen: name, change password, reminders, sign out, delete
+  account. `DELETE /account` (Lambda has `AdminUserGlobalSignOut` +
+  `AdminDeleteUser` on its own pool only) deletes photos → data → Cognito
+  user, in that order. The e2e test exercises it on every dev deploy.
+- Breed suggestions: bundled `app/src/data/breeds.json` generated from
+  Wikidata (CC0) by `app/scripts/build-breeds.mjs`. Not a DynamoDB table.
+- Vaccinations have optional `validFrom` (passport "valid from"; rabies
+  21-day rule); status is amber until then. Groundwork for the travel
+  checker.
 - Pets carry `photoUpdatedAt` (set by the API on upload) so the app can
   remind owners to refresh old photos, e.g. a puppy photo at ~1 year old.
 - Cost: keep everything on free/AWS-owned options (Cognito Essentials,

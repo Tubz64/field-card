@@ -73,13 +73,16 @@ export async function deletePhoto(key: string): Promise<void> {
 }
 
 /** Removes every object stored for a pet, including abandoned uploads. */
-export async function deletePetPhotos(userId: string, petId: string): Promise<void> {
+export const deletePetPhotos = (userId: string, petId: string) => deletePrefix(petPrefix(userId, petId));
+
+/** Removes every object a user has stored (used when deleting their account). */
+export const deleteUserPhotos = (userId: string) => deletePrefix(`users/${userId}/`);
+
+async function deletePrefix(Prefix: string): Promise<void> {
   const Bucket = photosBucket();
   let ContinuationToken: string | undefined;
   do {
-    const page = await s3.send(
-      new ListObjectsV2Command({ Bucket, Prefix: petPrefix(userId, petId), ContinuationToken }),
-    );
+    const page = await s3.send(new ListObjectsV2Command({ Bucket, Prefix, ContinuationToken }));
     const objects = (page.Contents ?? []).flatMap((o) => (o.Key ? [{ Key: o.Key }] : []));
     if (objects.length > 0) {
       await s3.send(new DeleteObjectsCommand({ Bucket, Delete: { Objects: objects, Quiet: true } }));

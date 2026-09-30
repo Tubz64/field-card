@@ -55,7 +55,10 @@ export function VaccinationForm({
   const initialGiven = vaccination?.given ?? localTodayIso();
   const [given, setGiven] = useState<string | null>(initialGiven);
   const [expires, setExpires] = useState<string | null>(vaccination?.expires ?? '');
+  const [validFrom, setValidFrom] = useState<string | null>(vaccination?.validFrom ?? '');
   const [touched, setTouched] = useState(false);
+  // Travel rules count rabies protection from the passport's "valid from" date.
+  const isRabies = /rabies/i.test(type);
 
   const local = {
     type: type.trim() ? undefined : 'Vaccine is required',
@@ -66,8 +69,17 @@ export function VaccinationForm({
         : expires && given && expires < given
           ? 'Expiry must be on or after the date given'
           : undefined,
+    validFrom: !isRabies
+      ? undefined
+      : validFrom === null
+        ? 'Enter a real date as DD-MM-YYYY'
+        : validFrom && given && validFrom < given
+          ? 'Valid from must be on or after the date given'
+          : validFrom && expires && validFrom > expires
+            ? 'Valid from must be on or before the expiry'
+            : undefined,
   };
-  const valid = !local.type && !local.given && !local.expires;
+  const valid = !local.type && !local.given && !local.expires && !local.validFrom;
   const show = (field: keyof typeof local) => (touched ? local[field] : undefined) ?? fieldError(error, field);
 
   return (
@@ -96,6 +108,16 @@ export function VaccinationForm({
       />
       <Field label="Vet / clinic" value={vet} onChangeText={setVet} placeholder="Optional" autoCapitalize="words" />
       <DateField label="Date given" initialIso={initialGiven} onChange={setGiven} error={show('given')} />
+      {isRabies ? (
+        <DateField
+          label="Valid from"
+          initialIso={vaccination?.validFrom}
+          onChange={setValidFrom}
+          optional
+          error={show('validFrom')}
+          hint="As in the pet passport. For a first rabies vaccination, 21 days after the date given."
+        />
+      ) : null}
       <DateField label="Expires / due" initialIso={vaccination?.expires} onChange={setExpires} optional error={show('expires')} />
       <Button
         title={vaccination ? 'Save changes' : 'Add vaccination'}
@@ -103,7 +125,15 @@ export function VaccinationForm({
         onPress={() => {
           setTouched(true);
           if (valid && given) {
-            onSubmit({ type: type.trim(), manufacturer, lotNumber, vet, given, expires: expires ?? '' });
+            onSubmit({
+              type: type.trim(),
+              manufacturer,
+              lotNumber,
+              vet,
+              given,
+              validFrom: isRabies ? (validFrom ?? '') : '',
+              expires: expires ?? '',
+            });
           }
         }}
       />

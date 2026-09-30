@@ -9,5 +9,6 @@
   "DELETE /pets/{petId}/vaccinations/{vaccinationId}",
   "POST /pets/{petId}/photo/upload",
   "PUT /pets/{petId}/photo",
-  "DELETE /pets/{petId}/photo"
+  "DELETE /pets/{petId}/photo",
+  "DELETE /account"
 ]
