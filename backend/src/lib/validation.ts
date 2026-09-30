@@ -28,6 +28,13 @@ const petFields = {
     .union([z.string().regex(/^\d{15}$/, 'Microchip number must be 15 digits'), z.literal('')])
     .nullish()
     .transform((v) => (v ? v : null)),
+  // Current weight in kg, kept to one decimal place.
+  weightKg: z
+    .number()
+    .positive('Weight must be more than 0')
+    .max(200, 'Weight must be 200 kg or less')
+    .nullish()
+    .transform((v) => (v == null ? null : Math.round(v * 10) / 10)),
 };
 
 export const createPetSchema = z.strictObject(petFields);
@@ -39,6 +46,9 @@ export const updatePetSchema = z
 const vaccinationFields = {
   type: z.string().trim().min(1).max(80),
   vet: optionalText(80),
+  // As recorded in a pet passport: "manufacturer and name of vaccine" and batch number.
+  manufacturer: optionalText(80),
+  lotNumber: optionalText(40),
   given: isoDate,
   expires: optionalDate,
 };

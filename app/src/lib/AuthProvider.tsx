@@ -5,9 +5,10 @@ import { hydrateTokenStorage } from './tokenStorage';
 
 interface AuthState {
   ready: boolean;
-  email: string | null;
+  /** Null when signed out. */
+  profile: auth.Profile | null;
   /** Set between a temporary-password sign-in and choosing a new password. */
-  pendingChallenge: { user: CognitoUser; email: string } | null;
+  pendingChallenge: { user: CognitoUser } | null;
   signIn(email: string, password: string): Promise<'signed-in' | 'new-password-required'>;
   completeNewPassword(newPassword: string): Promise<void>;
   signOut(): void;
@@ -17,45 +18,45 @@ const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children, onSignOut }: { children: ReactNode; onSignOut: () => void }) {
   const [ready, setReady] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
+  const [profile, setProfile] = useState<auth.Profile | null>(null);
   const [pendingChallenge, setPendingChallenge] = useState<AuthState['pendingChallenge']>(null);
 
   useEffect(() => {
     hydrateTokenStorage().then(() => {
-      setEmail(auth.currentEmail());
+      setProfile(auth.currentProfile());
       setReady(true);
     });
   }, []);
 
-  const signIn = useCallback(async (address: string, password: string) => {
-    const result = await auth.signIn(address, password);
+  const signIn = useCallback(async (email: string, password: string) => {
+    const result = await auth.signIn(email, password);
     if (result.status === 'new-password-required') {
-      setPendingChallenge({ user: result.user, email: address });
+      setPendingChallenge({ user: result.user });
       return 'new-password-required' as const;
     }
-    setEmail(auth.currentEmail());
+    setProfile(auth.currentProfile());
     return 'signed-in' as const;
   }, []);
 
   const completeNewPassword = useCallback(
     async (newPassword: string) => {
       if (!pendingChallenge) throw new Error('No sign-in in progress');
-      await auth.completeNewPassword(pendingChallenge.user, pendingChallenge.email, newPassword);
+      await auth.completeNewPassword(pendingChallenge.user, newPassword);
       setPendingChallenge(null);
-      setEmail(auth.currentEmail());
+      setProfile(auth.currentProfile());
     },
     [pendingChallenge],
   );
 
   const signOut = useCallback(() => {
     auth.signOut();
-    setEmail(null);
+    setProfile(null);
     onSignOut();
   }, [onSignOut]);
 
   const value = useMemo(
-    () => ({ ready, email, pendingChallenge, signIn, completeNewPassword, signOut }),
-    [ready, email, pendingChallenge, signIn, completeNewPassword, signOut],
+    () => ({ ready, profile, pendingChallenge, signIn, completeNewPassword, signOut }),
+    [ready, profile, pendingChallenge, signIn, completeNewPassword, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

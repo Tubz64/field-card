@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { PasswordField } from '../components/fields';
 import { Banner, Body, Button, Field, Screen } from '../components/ui';
 import { authErrorMessage, confirmSignUp, resendCode, signUp } from '../lib/auth';
 import { useAuth } from '../lib/AuthProvider';
+import { passwordValid } from '../lib/password';
 
 /** Two steps: create the account, then enter the code Cognito emails. */
 export default function SignUp() {
   const { signIn } = useAuth();
   const [step, setStep] = useState<'details' | 'code'>('details');
+  const [givenName, setGivenName] = useState('');
+  const [familyName, setFamilyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -26,25 +31,26 @@ export default function SignUp() {
   }
 
   if (step === 'details') {
+    const complete = givenName.trim() && familyName.trim() && email.trim() && passwordValid(password);
     return (
       <Screen>
         {message ? <Banner tone={message.tone}>{message.text}</Banner> : null}
-        <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email" keyboardType="email-address" />
-        <Field
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="new-password"
-          textContentType="newPassword"
-          hint="At least 10 characters, with a lowercase letter and a number."
-        />
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Field label="First name" value={givenName} onChangeText={setGivenName} autoComplete="given-name" autoCapitalize="words" textContentType="givenName" />
+          </View>
+          <View style={styles.flex}>
+            <Field label="Surname" value={familyName} onChangeText={setFamilyName} autoComplete="family-name" autoCapitalize="words" textContentType="familyName" />
+          </View>
+        </View>
+        <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" />
+        <PasswordField value={password} onChangeText={setPassword} />
         <Button
           title="Create account"
           busy={busy}
-          disabled={!email || !password}
+          disabled={!complete}
           onPress={() => run(async () => {
-            await signUp(email, password);
+            await signUp({ givenName, familyName, email, password });
             setStep('code');
           })}
         />
@@ -77,3 +83,8 @@ export default function SignUp() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 10 },
+  flex: { flex: 1 },
+});

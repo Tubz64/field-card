@@ -108,7 +108,24 @@ Decisions:
   `npx expo install`; no Dependabot for `app/`, since Expo pins SDK-matched
   versions. `dev` allows CORS from `http://localhost:8081` only (the
   `web_dev_origins` local); prod has none.
-- Dates in the UI are typed as YYYY-MM-DD for now (no native date picker yet).
+- Dates in the UI are typed as DD-MM-YYYY (`DateField`, dashes auto-added)
+  and converted to YYYY-MM-DD for the API. No native date picker yet.
+- Pets have optional `weightKg` (0–200, one decimal place). Vaccinations have
+  optional `manufacturer` (brand, e.g. Nobivac) and `lotNumber`, as a vet
+  records them in a pet passport. Vaccine suggestions in the app are
+  per-species (dogs: Rabies, DHP, DHPPi, L4, Kennel cough).
+- `backend`: `npm run dev:delete-user -- <email>` removes a dev account and
+  all of its data (dev only).
+- Sign-up collects first name + surname as Cognito `given_name` /
+  `family_name` (not required at pool level: changing required attributes
+  would replace the pool). The app greets users by the ID token's
+  `given_name`, falling back to email.
+- `app/` lint is ESLint 10 with a custom flat config (not
+  `eslint-config-expo`, which needs deprecated ESLint 9). `package.json`
+  `overrides` pin `uuid` 11.1.1, a vendored CJS `decode-uri-component` 0.5.0
+  (`app/vendor/`), and ESLint for `eslint-plugin-expo`, so `npm ci` stays free
+  of warnings. Don't "fix" these by overriding `query-string` to v9: it's
+  default-export-only and breaks expo-router at runtime.
 - Expiry-reminder notifications are not built yet (next app milestone).
 - Pets carry `photoUpdatedAt` (set by the API on upload) so the app can
   remind owners to refresh old photos, e.g. a puppy photo at ~1 year old.

@@ -8,6 +8,8 @@ const vax = (expires: string | null, given = '2026-01-01'): Vaccination => ({
   petId: 'p',
   type: 'Rabies',
   vet: null,
+  manufacturer: null,
+  lotNumber: null,
   given,
   expires,
   createdAt: '',

@@ -1,35 +1,13 @@
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { PetPhoto } from '../../../components/PetPhoto';
 import { Badge, Banner, Body, Button, Card, Heading, Loading, Screen, SectionLabel } from '../../../components/ui';
-import { confirm, notify } from '../../../lib/confirm';
+import { confirm } from '../../../lib/confirm';
 import { formatDate } from '../../../lib/format';
+import { pickPhoto } from '../../../lib/photo';
 import { useDeletePet, usePet, useRemovePhoto, useSetPhoto } from '../../../lib/queries';
 import { localToday, overallStatus, photoReminder, statusFor, upcoming } from '../../../lib/status';
 import { fonts, useColors } from '../../../theme';
-
-/** Photos are resized on the device before upload: small, fast, well under the 5 MB limit. */
-const PHOTO_WIDTH = 800;
-
-async function pickPhoto(source: 'library' | 'camera'): Promise<string | null> {
-  const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 1 };
-  if (source === 'camera') {
-    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
-    if (!granted) {
-      notify('Camera access needed', 'Allow camera access in Settings to take a photo.');
-      return null;
-    }
-  }
-  const result =
-    source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
-  const uri = result.canceled ? undefined : result.assets[0]?.uri;
-  if (!uri) return null;
-  const image = await ImageManipulator.manipulate(uri).resize({ width: PHOTO_WIDTH }).renderAsync();
-  const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
-  return saved.uri;
-}
 
 export default function PetDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -64,7 +42,9 @@ export default function PetDetail() {
       <Stack.Screen options={{ title: pet.name }} />
 
       <View style={styles.header}>
-        <PetPhoto pet={pet} size={120} />
+        <Pressable onPress={() => changePhoto('library')} accessibilityRole="button" accessibilityLabel="Change photo">
+          <PetPhoto pet={pet} size={120} />
+        </Pressable>
         <Heading>{pet.name}</Heading>
         <Body muted>
           {pet.species}
@@ -75,10 +55,16 @@ export default function PetDetail() {
       </View>
 
       <Card>
-        <Text style={[styles.label, { color: colors.mossDark }]}>Microchip</Text>
+        <Text style={[styles.label, { color: colors.mossDark }]}>Microchip number</Text>
         <Text style={[styles.chip, { color: colors.ink }]} selectable>
           {pet.chip ?? 'Not recorded'}
         </Text>
+        {pet.weightKg != null ? (
+          <>
+            <Text style={[styles.label, { color: colors.mossDark }]}>Weight</Text>
+            <Text style={[styles.itemTitle, { color: colors.ink }]}>{pet.weightKg} kg</Text>
+          </>
+        ) : null}
       </Card>
 
       {reminder ? <Banner tone="warn">{reminder.message}</Banner> : null}
@@ -126,6 +112,11 @@ export default function PetDetail() {
                 {v.vet ? ` · ${v.vet}` : ''}
                 {v.expires ? ` · expires ${formatDate(v.expires)}` : ''}
               </Body>
+              {v.manufacturer || v.lotNumber ? (
+                <Body muted>
+                  {[v.manufacturer, v.lotNumber ? `Lot ${v.lotNumber}` : null].filter(Boolean).join(' · ')}
+                </Body>
+              ) : null}
             </View>
             <Badge status={statusFor(v, today)} />
           </View>
