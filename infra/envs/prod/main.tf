@@ -4,6 +4,7 @@ locals {
   # The only per-environment differences.
   self_signup_enabled = false # false = invite-only (see infra/README.md)
   protect_data        = true  # deletion protection on; buckets keep photos on destroy
+  web_dev_origins     = []    # no browser access
 }
 
 module "auth" {
@@ -24,8 +25,9 @@ module "database" {
 module "photos" {
   source = "../../modules/photos"
 
-  name_prefix   = local.name_prefix
-  force_destroy = !local.protect_data
+  name_prefix        = local.name_prefix
+  force_destroy      = !local.protect_data
+  cors_allow_origins = local.web_dev_origins
 }
 
 module "api" {
@@ -42,4 +44,5 @@ module "api" {
   photos_bucket_arn  = module.photos.bucket_arn
   user_pool_endpoint = module.auth.user_pool_endpoint
   app_client_id      = module.auth.app_client_id
+  cors_allow_origins = local.web_dev_origins
 }

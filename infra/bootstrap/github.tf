@@ -99,6 +99,11 @@ resource "github_repository_ruleset" "deploy_branch" {
       }
 
       required_check {
+        context        = "app: lint / typecheck / test"
+        integration_id = local.github_actions_app_id
+      }
+
+      required_check {
         context        = "plan (${each.key})"
         integration_id = local.github_actions_app_id
       }

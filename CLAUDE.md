@@ -99,6 +99,17 @@ Decisions:
 - Photos: presigned POST (S3 enforces JPEG + 5 MB), then `PUT .../photo`
   confirms, sets `photoUpdatedAt` and deletes the old object. Pet responses
   carry a 1-hour presigned `photoUrl`; the app caches the image.
+- `app/` (see its README): Expo SDK 57 + Expo Router (`src/app/`), runs on
+  phones via Expo Go and in a browser (`npm run web`, localhost:8081). Auth is
+  `amazon-cognito-identity-js` SRP (pure JS, works in Expo Go; Amplify would
+  need a dev build) with tokens in SecureStore. Data is React Query persisted to
+  AsyncStorage (offline proof of vaccination). `npm run configure` writes
+  `.env.local` from AWS (IDs are not committed). Install Expo packages with
+  `npx expo install`; no Dependabot for `app/`, since Expo pins SDK-matched
+  versions. `dev` allows CORS from `http://localhost:8081` only (the
+  `web_dev_origins` local); prod has none.
+- Dates in the UI are typed as YYYY-MM-DD for now (no native date picker yet).
+- Expiry-reminder notifications are not built yet (next app milestone).
 - Pets carry `photoUpdatedAt` (set by the API on upload) so the app can
   remind owners to refresh old photos, e.g. a puppy photo at ~1 year old.
 - Cost: keep everything on free/AWS-owned options (Cognito Essentials,

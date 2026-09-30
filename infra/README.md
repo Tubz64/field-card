@@ -20,6 +20,7 @@ The only differences live in `locals` at the top of `envs/<env>/main.tf`:
 |---|---|---|
 | `self_signup_enabled` | `true` | `false` (invite-only) |
 | `protect_data` (deletion protection on the user pool and table; bucket not force-destroyed) | `false` | `true` |
+| `web_dev_origins` (browser origins allowed by API + photo bucket CORS) | `http://localhost:8081` (Expo web) | none |
 
 ## Inviting a user (invite-only envs)
 
