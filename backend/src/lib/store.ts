@@ -9,16 +9,16 @@ import { ddb, tableName } from './aws.js';
 import { notFound } from './http.js';
 import { petSk, userPk, type Item, type PetItem, type VaccinationItem } from './model.js';
 
-/** All items under a key prefix for one user, following pagination. */
-async function queryPrefix(userId: string, prefix: string): Promise<Item[]> {
+/** All items under a key prefix for one user (every item if no prefix), following pagination. */
+async function queryPrefix(userId: string, prefix?: string): Promise<Item[]> {
   const items: Item[] = [];
   let ExclusiveStartKey: Record<string, unknown> | undefined;
   do {
     const page = await ddb.send(
       new QueryCommand({
         TableName: tableName(),
-        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-        ExpressionAttributeValues: { ':pk': userPk(userId), ':prefix': prefix },
+        KeyConditionExpression: prefix ? 'PK = :pk AND begins_with(SK, :prefix)' : 'PK = :pk',
+        ExpressionAttributeValues: prefix ? { ':pk': userPk(userId), ':prefix': prefix } : { ':pk': userPk(userId) },
         ExclusiveStartKey,
       }),
     );
@@ -29,6 +29,8 @@ async function queryPrefix(userId: string, prefix: string): Promise<Item[]> {
 }
 
 export const queryUserItems = (userId: string) => queryPrefix(userId, 'PET#');
+/** Every item the user owns, whatever its type (for account deletion). */
+export const queryAllUserItems = (userId: string) => queryPrefix(userId);
 
 /** A pet and its vaccinations, or 404. */
 export async function queryPet(

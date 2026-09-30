@@ -39,6 +39,7 @@ export interface VaccinationItem {
   manufacturer?: string;
   lotNumber?: string;
   given: string;
+  validFrom?: string;
   expires?: string;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +55,7 @@ export interface Vaccination {
   manufacturer: string | null;
   lotNumber: string | null;
   given: string;
+  validFrom: string | null;
   expires: string | null;
   createdAt: string;
   updatedAt: string;
@@ -84,6 +86,7 @@ export function toVaccination(item: VaccinationItem): Vaccination {
     manufacturer: item.manufacturer ?? null,
     lotNumber: item.lotNumber ?? null,
     given: item.given,
+    validFrom: item.validFrom ?? null,
     expires: item.expires ?? null,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,

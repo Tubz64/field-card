@@ -56,23 +56,25 @@ one in a PATCH.
 | `GET /pets/{petId}` | | `200 Pet` |
 | `PATCH /pets/{petId}` | any pet fields | `200 Pet` |
 | `DELETE /pets/{petId}` | | `204` (also deletes its vaccinations and photos) |
-| `POST /pets/{petId}/vaccinations` | `{ type, given, vet?, manufacturer?, lotNumber?, expires? }` | `201 Vaccination` |
+| `POST /pets/{petId}/vaccinations` | `{ type, given, vet?, manufacturer?, lotNumber?, validFrom?, expires? }` | `201 Vaccination` |
 | `PATCH /pets/{petId}/vaccinations/{vaccinationId}` | any vaccination fields | `200 Vaccination` |
 | `DELETE /pets/{petId}/vaccinations/{vaccinationId}` | | `204` |
 | `POST /pets/{petId}/photo/upload` | | `201 { url, fields, key, maxBytes, expiresAt }` |
 | `PUT /pets/{petId}/photo` | `{ key }` | `200 Pet` |
 | `DELETE /pets/{petId}/photo` | | `204` |
+| `DELETE /account` | | `204`: deletes all the caller's data and photos, then their Cognito user. Safe to retry. |
 
 - `species`: `Dog` \| `Cat` \| `Rabbit` \| `Other`
 - `chip`: exactly 15 digits
 - `weightKg`: a number over 0 and up to 200, rounded to one decimal place
 - `manufacturer` (brand, e.g. Nobivac) and `lotNumber` (batch) match what a vet records in a pet passport
 - `expires` must be on or after `given`
+- `validFrom` (pet passport "valid from"; for a first rabies vaccination, 21 days after `given`) must fall between `given` and `expires`
 
 ```ts
 Pet = { id, name, species, breed, dob, chip, weightKg, photoUrl, photoUpdatedAt,
         createdAt, updatedAt, vaccinations: Vaccination[] }  // vaccinations newest first
-Vaccination = { id, petId, type, vet, manufacturer, lotNumber, given, expires,
+Vaccination = { id, petId, type, vet, manufacturer, lotNumber, given, validFrom, expires,
                 createdAt, updatedAt }
 ```
 

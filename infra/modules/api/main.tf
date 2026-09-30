@@ -59,6 +59,14 @@ data "aws_iam_policy_document" "lambda" {
     resources = ["${var.photos_bucket_arn}/users/*"]
   }
 
+  # DELETE /account removes the caller's own Cognito user (the function only
+  # ever passes the username from the verified token).
+  statement {
+    sid       = "DeleteOwnAccount"
+    actions   = ["cognito-idp:AdminUserGlobalSignOut", "cognito-idp:AdminDeleteUser"]
+    resources = [var.user_pool_arn]
+  }
+
   statement {
     sid       = "ListPhotos"
     actions   = ["s3:ListBucket"]
@@ -98,6 +106,7 @@ resource "aws_lambda_function" "api" {
     variables = {
       TABLE_NAME    = var.table_name
       PHOTOS_BUCKET = var.photos_bucket_name
+      USER_POOL_ID  = var.user_pool_id
     }
   }
 

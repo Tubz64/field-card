@@ -29,6 +29,14 @@ variable "photos_bucket_arn" {
   type = string
 }
 
+variable "user_pool_id" {
+  type = string
+}
+
+variable "user_pool_arn" {
+  type = string
+}
+
 variable "user_pool_endpoint" {
   description = "Cognito user pool endpoint (issuer host, without https://)."
   type        = string

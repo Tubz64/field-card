@@ -4,6 +4,7 @@ import type {
 } from 'aws-lambda';
 import { HttpError, parseJsonBody, toErrorResponse } from '../lib/http.js';
 import type { RouteContext } from '../lib/types.js';
+import { deleteAccount } from '../routes/account.js';
 import { createPet, deletePet, getPet, listPets, updatePet } from '../routes/pets.js';
 import { confirmPhoto, removePhoto, startPhotoUpload } from '../routes/photo.js';
 import {
@@ -29,6 +30,7 @@ export const routes: Record<string, RouteHandler> = {
   'POST /pets/{petId}/photo/upload': startPhotoUpload,
   'PUT /pets/{petId}/photo': confirmPhoto,
   'DELETE /pets/{petId}/photo': removePhoto,
+  'DELETE /account': deleteAccount,
 };
 
 export { routeKeys };
@@ -39,14 +41,18 @@ export async function handler(
   try {
     // API Gateway's JWT authorizer has already verified the token; this is
     // defence in depth, and the source of the user's identity.
-    const userId = event.requestContext.authorizer?.jwt?.claims?.sub;
+    const claims = event.requestContext.authorizer?.jwt?.claims ?? {};
+    const userId = claims.sub;
     if (typeof userId !== 'string' || !userId) throw new HttpError(401, 'Unauthorized');
+    // Access tokens carry `username`, ID tokens `cognito:username`.
+    const username = String(claims.username ?? claims['cognito:username'] ?? userId);
 
     const route = routes[event.routeKey];
     if (!route) throw new HttpError(404, 'Not found');
 
     return await route({
       userId,
+      username,
       params: event.pathParameters ?? {},
       body: parseJsonBody(event.body, event.isBase64Encoded),
     });
