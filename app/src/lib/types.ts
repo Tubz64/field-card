@@ -38,6 +38,12 @@ export interface PetInput {
   chip: string;
 }
 
+/** What the pet form submits: the details plus an optional new local photo. */
+export interface PetSave {
+  input: PetInput;
+  photoUri: string | null;
+}
+
 export interface VaccinationInput {
   type: string;
   vet: string;

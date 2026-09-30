@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
-import type { Pet, PetInput, VaccinationInput } from './types';
+import type { Pet, PetSave, VaccinationInput } from './types';
 
 const DAY = 24 * 60 * 60 * 1000;
 /** How long saved records stay usable offline. */
@@ -39,14 +39,28 @@ function upsertPet(pet: Pet) {
 
 const refresh = () => queryClient.invalidateQueries({ queryKey: PETS });
 
+/**
+ * Saves pet details, then uploads a newly chosen photo. If only the photo
+ * fails, the pet is still saved and the error comes back as `photoError`.
+ */
 export function useSavePet(id?: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: PetInput) => (id ? api.updatePet(id, input) : api.createPet(input)),
-    onSuccess: (pet) => {
+    mutationFn: async ({ input, photoUri }: PetSave) => {
+      let pet = id ? await api.updatePet(id, input) : await api.createPet(input);
       upsertPet(pet);
-      void client.invalidateQueries({ queryKey: PETS });
+      let photoError: Error | null = null;
+      if (photoUri) {
+        try {
+          pet = await api.setPhoto(pet.id, photoUri);
+          upsertPet(pet);
+        } catch (err) {
+          photoError = err instanceof Error ? err : new Error('Photo upload failed');
+        }
+      }
+      return { pet, photoError };
     },
+    onSuccess: () => client.invalidateQueries({ queryKey: PETS }),
   });
 }
 

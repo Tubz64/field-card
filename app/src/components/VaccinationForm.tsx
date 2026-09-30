@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ApiError, fieldError } from '../lib/api';
-import { isIsoDate, localTodayIso } from '../lib/format';
+import { localTodayIso } from '../lib/format';
 import type { Vaccination, VaccinationInput } from '../lib/types';
 import { fonts, useColors } from '../theme';
+import { DateField } from './fields';
 import { Banner, Button, Field } from './ui';
 
 /** Common UK vaccinations, from the prototype's suggestions list. */
@@ -23,17 +24,18 @@ export function VaccinationForm({
   const colors = useColors();
   const [type, setType] = useState(vaccination?.type ?? '');
   const [vet, setVet] = useState(vaccination?.vet ?? '');
-  const [given, setGiven] = useState(vaccination?.given ?? localTodayIso());
-  const [expires, setExpires] = useState(vaccination?.expires ?? '');
+  const initialGiven = vaccination?.given ?? localTodayIso();
+  const [given, setGiven] = useState<string | null>(initialGiven);
+  const [expires, setExpires] = useState<string | null>(vaccination?.expires ?? '');
   const [touched, setTouched] = useState(false);
 
   const local = {
     type: type.trim() ? undefined : 'Vaccine is required',
-    given: isIsoDate(given) ? undefined : 'Use the format YYYY-MM-DD',
+    given: given ? undefined : 'Enter a real date as DD-MM-YYYY',
     expires:
-      expires && !isIsoDate(expires)
-        ? 'Use the format YYYY-MM-DD'
-        : expires && expires < given
+      expires === null
+        ? 'Enter a real date as DD-MM-YYYY'
+        : expires && given && expires < given
           ? 'Expiry must be on or after the date given'
           : undefined,
   };
@@ -56,28 +58,14 @@ export function VaccinationForm({
         ))}
       </View>
       <Field label="Vet / clinic" value={vet} onChangeText={setVet} placeholder="Optional" autoCapitalize="words" />
-      <Field
-        label="Date given"
-        value={given}
-        onChangeText={setGiven}
-        placeholder="YYYY-MM-DD"
-        keyboardType="numbers-and-punctuation"
-        error={show('given')}
-      />
-      <Field
-        label="Expires / due"
-        value={expires}
-        onChangeText={setExpires}
-        placeholder="YYYY-MM-DD (optional)"
-        keyboardType="numbers-and-punctuation"
-        error={show('expires')}
-      />
+      <DateField label="Date given" initialIso={initialGiven} onChange={setGiven} error={show('given')} />
+      <DateField label="Expires / due" initialIso={vaccination?.expires} onChange={setExpires} optional error={show('expires')} />
       <Button
         title={vaccination ? 'Save changes' : 'Add vaccination'}
         busy={saving}
         onPress={() => {
           setTouched(true);
-          if (valid) onSubmit({ type: type.trim(), vet, given, expires });
+          if (valid && given) onSubmit({ type: type.trim(), vet, given, expires: expires ?? '' });
         }}
       />
     </>

@@ -42,7 +42,7 @@ export default function RootLayout() {
 }
 
 function Navigator({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { ready, email, signOut } = useAuth();
+  const { ready, profile, signOut } = useAuth();
   const colors = useColors();
   const loaded = ready && fontsLoaded;
 
@@ -68,7 +68,7 @@ function Navigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   }, [signOut]);
 
   if (!loaded) return null;
-  const signedIn = email !== null;
+  const signedIn = profile !== null;
 
   return (
     <>

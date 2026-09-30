@@ -30,9 +30,10 @@ addresses end up in this public repo.
 
 ```bash
 POOL=$(terraform -chdir=infra/envs/prod output -raw user_pool_id)
-EMAIL=someone@example.com
+EMAIL=someone@example.com FIRST=Sam LAST=Smith
 aws cognito-idp admin-create-user --user-pool-id "$POOL" --username "$EMAIL" \
   --user-attributes Name=email,Value="$EMAIL" Name=email_verified,Value=true \
+    Name=given_name,Value="$FIRST" Name=family_name,Value="$LAST" \
   --desired-delivery-mediums EMAIL
 ```
 

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
+import { PasswordField } from '../components/fields';
 import { Banner, Body, Button, Field, Screen } from '../components/ui';
 import { authErrorMessage, confirmForgotPassword, forgotPassword } from '../lib/auth';
 import { notify } from '../lib/confirm';
+import { passwordValid } from '../lib/password';
 
 export default function ForgotPassword() {
   const [step, setStep] = useState<'email' | 'reset'>('email');
@@ -45,18 +47,11 @@ export default function ForgotPassword() {
         <>
           <Body>If {email} has an account, we&apos;ve emailed it a code.</Body>
           <Field label="Code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code" />
-          <Field
-            label="New password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="new-password"
-            hint="At least 10 characters, with a lowercase letter and a number."
-          />
+          <PasswordField label="New password" value={password} onChangeText={setPassword} />
           <Button
             title="Reset password"
             busy={busy}
-            disabled={!code || !password}
+            disabled={!code || !passwordValid(password)}
             onPress={() => run(async () => {
               await confirmForgotPassword(email, code, password);
               notify('Password reset', 'You can now sign in with your new password.');

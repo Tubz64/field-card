@@ -9,7 +9,7 @@ import { localToday, overallStatus } from '../lib/status';
 import { fonts, useColors } from '../theme';
 
 export default function PetList() {
-  const { email, signOut } = useAuth();
+  const { profile, signOut } = useAuth();
   const colors = useColors();
   const { data: pets, error, isPending, isRefetching, refetch, dataUpdatedAt } = usePets();
   const today = localToday();
@@ -29,7 +29,8 @@ export default function PetList() {
         <Loading />
       ) : (
         <Screen refreshing={isRefetching} onRefresh={refetch}>
-          <Body muted>Signed in as {email}</Body>
+          {/* Accounts created before names were collected fall back to the email. */}
+          <Body muted>Signed in as {profile?.givenName || profile?.email}</Body>
           {error && pets ? (
             <Banner tone="warn">Offline. Showing records saved {formatAgo(dataUpdatedAt)}.</Banner>
           ) : error ? (

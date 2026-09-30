@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Redirect } from 'expo-router';
-import { Banner, Body, Button, Field, Screen } from '../components/ui';
+import { PasswordField } from '../components/fields';
+import { Banner, Body, Button, Screen } from '../components/ui';
 import { authErrorMessage } from '../lib/auth';
 import { useAuth } from '../lib/AuthProvider';
+import { passwordValid } from '../lib/password';
 
 /** First sign-in with the temporary password from an invite. */
 export default function NewPassword() {
@@ -28,16 +30,8 @@ export default function NewPassword() {
     <Screen>
       <Body>Welcome to Pawpers. Choose a password to replace the temporary one from your invite.</Body>
       {error ? <Banner tone="error">{error}</Banner> : null}
-      <Field
-        label="New password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete="new-password"
-        textContentType="newPassword"
-        hint="At least 10 characters, with a lowercase letter and a number."
-      />
-      <Button title="Save and sign in" onPress={submit} busy={busy} disabled={!password} />
+      <PasswordField label="New password" value={password} onChangeText={setPassword} />
+      <Button title="Save and sign in" onPress={submit} busy={busy} disabled={!passwordValid(password)} />
     </Screen>
   );
 }
