@@ -55,10 +55,16 @@ export default function PetDetail() {
       </View>
 
       <Card>
-        <Text style={[styles.label, { color: colors.mossDark }]}>Microchip</Text>
+        <Text style={[styles.label, { color: colors.mossDark }]}>Microchip number</Text>
         <Text style={[styles.chip, { color: colors.ink }]} selectable>
           {pet.chip ?? 'Not recorded'}
         </Text>
+        {pet.weightKg != null ? (
+          <>
+            <Text style={[styles.label, { color: colors.mossDark }]}>Weight</Text>
+            <Text style={[styles.itemTitle, { color: colors.ink }]}>{pet.weightKg} kg</Text>
+          </>
+        ) : null}
       </Card>
 
       {reminder ? <Banner tone="warn">{reminder.message}</Banner> : null}
@@ -106,6 +112,11 @@ export default function PetDetail() {
                 {v.vet ? ` · ${v.vet}` : ''}
                 {v.expires ? ` · expires ${formatDate(v.expires)}` : ''}
               </Body>
+              {v.manufacturer || v.lotNumber ? (
+                <Body muted>
+                  {[v.manufacturer, v.lotNumber ? `Lot ${v.lotNumber}` : null].filter(Boolean).join(' · ')}
+                </Body>
+              ) : null}
             </View>
             <Badge status={statusFor(v, today)} />
           </View>

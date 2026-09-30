@@ -27,15 +27,20 @@ export function PetForm({
   const [breed, setBreed] = useState(pet?.breed ?? '');
   const [dob, setDob] = useState<string | null>(pet?.dob ?? '');
   const [chip, setChip] = useState(pet?.chip ?? '');
+  const [weight, setWeight] = useState(pet?.weightKg != null ? String(pet.weightKg) : '');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
+  // Accept "12.5" or "12,5".
+  const weightKg = weight ? (/^\d+([.,]\d+)?$/.test(weight) ? Number(weight.replace(',', '.')) : null) : null;
   const local = {
     name: name.trim() ? undefined : 'Pet name is required',
     dob: dob === null ? 'Enter a real date as DD-MM-YYYY' : dob && dob > localTodayIso() ? "Date of birth can't be in the future" : undefined,
     chip: chip && !/^\d{15}$/.test(chip) ? 'Microchip number must be 15 digits' : undefined,
+    weightKg:
+      weight && (weightKg === null || weightKg <= 0 || weightKg > 200) ? 'Enter a weight in kg, e.g. 12.5' : undefined,
   };
-  const valid = !local.name && !local.dob && !local.chip;
+  const valid = !local.name && !local.dob && !local.chip && !local.weightKg;
   const show = (field: keyof typeof local) => (touched ? local[field] : undefined) ?? fieldError(error, field);
 
   async function choose(source: 'library' | 'camera') {
@@ -89,12 +94,21 @@ export function PetForm({
         maxLength={15}
         error={show('chip')}
       />
+      <Field
+        label="Weight (kg)"
+        value={weight}
+        onChangeText={(v) => setWeight(v.replace(/[^\d.,]/g, ''))}
+        placeholder="Optional, e.g. 12.5"
+        keyboardType="decimal-pad"
+        maxLength={6}
+        error={show('weightKg')}
+      />
       <Button
         title={pet ? 'Save changes' : 'Add pet'}
         busy={saving}
         onPress={() => {
           setTouched(true);
-          if (valid) onSubmit({ input: { name: name.trim(), species, breed, dob: dob ?? '', chip }, photoUri });
+          if (valid) onSubmit({ input: { name: name.trim(), species, breed, dob: dob ?? '', chip, weightKg }, photoUri });
         }}
       />
     </>

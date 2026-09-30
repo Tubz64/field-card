@@ -22,6 +22,7 @@ export default function EditVaccination() {
   return (
     <Screen>
       <VaccinationForm
+        species={pet?.species ?? 'Dog'}
         vaccination={vaccination}
         saving={save.isPending}
         error={save.error}

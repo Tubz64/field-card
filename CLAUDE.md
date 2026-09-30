@@ -110,6 +110,12 @@ Decisions:
   `web_dev_origins` local); prod has none.
 - Dates in the UI are typed as DD-MM-YYYY (`DateField`, dashes auto-added)
   and converted to YYYY-MM-DD for the API. No native date picker yet.
+- Pets have optional `weightKg` (0–200, one decimal place). Vaccinations have
+  optional `manufacturer` (brand, e.g. Nobivac) and `lotNumber`, as a vet
+  records them in a pet passport. Vaccine suggestions in the app are
+  per-species (dogs: Rabies, DHP, DHPPi, L4, Kennel cough).
+- `backend`: `npm run dev:delete-user -- <email>` removes a dev account and
+  all of its data (dev only).
 - Sign-up collects first name + surname as Cognito `given_name` /
   `family_name` (not required at pool level: changing required attributes
   would replace the pool). The app greets users by the ID token's

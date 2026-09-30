@@ -204,8 +204,13 @@ async function run() {
         breed: 'Collie',
         dob: '2025-06-01',
         chip: '933012400146699',
+        weightKg: 18.25,
       });
-      expect(r.status === 201 && r.body.id && r.body.breed === 'Collie', 'expected 201 pet', r);
+      expect(
+        r.status === 201 && r.body.id && r.body.breed === 'Collie' && r.body.weightKg === 18.3,
+        'expected 201 pet with weight rounded to 18.3',
+        r,
+      );
       petId = r.body.id;
     });
 
@@ -234,8 +239,14 @@ async function run() {
         type: 'Rabies',
         given: '2026-03-01',
         expires: '2029-03-01',
+        manufacturer: 'Nobivac',
+        lotNumber: 'E2E-LOT-1',
       });
-      expect(r.status === 201 && r.body.id, 'expected 201 vaccination', r);
+      expect(
+        r.status === 201 && r.body.id && r.body.manufacturer === 'Nobivac' && r.body.lotNumber === 'E2E-LOT-1',
+        'expected 201 vaccination with manufacturer and lot number',
+        r,
+      );
       vaccinationId = r.body.id;
     });
 

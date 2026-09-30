@@ -26,6 +26,16 @@ real S3 photo upload, download and size rejection, and cascade delete. The
 users and their data are always deleted afterwards, even on failure. It
 refuses to run against any environment other than `dev`.
 
+## Removing a dev account
+
+```bash
+npm run dev:delete-user -- someone@example.com
+```
+
+Deletes the `dev` Cognito user **and** everything they own (pets,
+vaccinations, photos), so the email can register again cleanly. Refuses to
+run against anything but `dev`.
+
 ## Auth
 
 Every route requires `Authorization: Bearer <token>`, where the token is a
@@ -42,11 +52,11 @@ one in a PATCH.
 | Route | Body | Returns |
 |---|---|---|
 | `GET /pets` | | `200 { pets: Pet[] }` |
-| `POST /pets` | `{ name, species, breed?, dob?, chip? }` | `201 Pet` |
+| `POST /pets` | `{ name, species, breed?, dob?, chip?, weightKg? }` | `201 Pet` |
 | `GET /pets/{petId}` | | `200 Pet` |
 | `PATCH /pets/{petId}` | any pet fields | `200 Pet` |
 | `DELETE /pets/{petId}` | | `204` (also deletes its vaccinations and photos) |
-| `POST /pets/{petId}/vaccinations` | `{ type, given, vet?, expires? }` | `201 Vaccination` |
+| `POST /pets/{petId}/vaccinations` | `{ type, given, vet?, manufacturer?, lotNumber?, expires? }` | `201 Vaccination` |
 | `PATCH /pets/{petId}/vaccinations/{vaccinationId}` | any vaccination fields | `200 Vaccination` |
 | `DELETE /pets/{petId}/vaccinations/{vaccinationId}` | | `204` |
 | `POST /pets/{petId}/photo/upload` | | `201 { url, fields, key, maxBytes, expiresAt }` |
@@ -55,12 +65,15 @@ one in a PATCH.
 
 - `species`: `Dog` \| `Cat` \| `Rabbit` \| `Other`
 - `chip`: exactly 15 digits
+- `weightKg`: a number over 0 and up to 200, rounded to one decimal place
+- `manufacturer` (brand, e.g. Nobivac) and `lotNumber` (batch) match what a vet records in a pet passport
 - `expires` must be on or after `given`
 
 ```ts
-Pet = { id, name, species, breed, dob, chip, photoUrl, photoUpdatedAt,
+Pet = { id, name, species, breed, dob, chip, weightKg, photoUrl, photoUpdatedAt,
         createdAt, updatedAt, vaccinations: Vaccination[] }  // vaccinations newest first
-Vaccination = { id, petId, type, vet, given, expires, createdAt, updatedAt }
+Vaccination = { id, petId, type, vet, manufacturer, lotNumber, given, expires,
+                createdAt, updatedAt }
 ```
 
 Errors: `{ message, details? }`. A `400` from validation includes

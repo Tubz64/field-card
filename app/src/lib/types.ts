@@ -9,6 +9,10 @@ export interface Vaccination {
   petId: string;
   type: string;
   vet: string | null;
+  /** Brand as recorded in a pet passport, e.g. Nobivac. */
+  manufacturer: string | null;
+  /** Batch / lot number from the vaccine sticker. */
+  lotNumber: string | null;
   given: string; // YYYY-MM-DD
   expires: string | null; // YYYY-MM-DD
   createdAt: string;
@@ -22,6 +26,7 @@ export interface Pet {
   breed: string | null;
   dob: string | null;
   chip: string | null;
+  weightKg: number | null;
   /** Presigned, valid for 1 hour. Never persist it; expo-image caches the bytes. */
   photoUrl: string | null;
   photoUpdatedAt: string | null;
@@ -36,6 +41,7 @@ export interface PetInput {
   breed: string;
   dob: string;
   chip: string;
+  weightKg: number | null;
 }
 
 /** What the pet form submits: the details plus an optional new local photo. */
@@ -47,6 +53,8 @@ export interface PetSave {
 export interface VaccinationInput {
   type: string;
   vet: string;
+  manufacturer: string;
+  lotNumber: string;
   given: string;
   expires: string;
 }

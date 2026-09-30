@@ -20,6 +20,7 @@ export interface PetItem {
   breed?: string;
   dob?: string;
   chip?: string;
+  weightKg?: number;
   photoKey?: string;
   /** ISO timestamp of the last confirmed photo upload; drives "update photo" reminders. */
   photoUpdatedAt?: string;
@@ -35,6 +36,8 @@ export interface VaccinationItem {
   petId: string;
   type: string;
   vet?: string;
+  manufacturer?: string;
+  lotNumber?: string;
   given: string;
   expires?: string;
   createdAt: string;
@@ -48,6 +51,8 @@ export interface Vaccination {
   petId: string;
   type: string;
   vet: string | null;
+  manufacturer: string | null;
+  lotNumber: string | null;
   given: string;
   expires: string | null;
   createdAt: string;
@@ -61,6 +66,7 @@ export interface Pet {
   breed: string | null;
   dob: string | null;
   chip: string | null;
+  weightKg: number | null;
   /** Short-lived presigned GET URL; download and cache it on the device. */
   photoUrl: string | null;
   photoUpdatedAt: string | null;
@@ -75,6 +81,8 @@ export function toVaccination(item: VaccinationItem): Vaccination {
     petId: item.petId,
     type: item.type,
     vet: item.vet ?? null,
+    manufacturer: item.manufacturer ?? null,
+    lotNumber: item.lotNumber ?? null,
     given: item.given,
     expires: item.expires ?? null,
     createdAt: item.createdAt,
@@ -94,6 +102,7 @@ export function toPet(
     breed: item.breed ?? null,
     dob: item.dob ?? null,
     chip: item.chip ?? null,
+    weightKg: item.weightKg ?? null,
     photoUrl,
     photoUpdatedAt: item.photoUpdatedAt ?? null,
     createdAt: item.createdAt,

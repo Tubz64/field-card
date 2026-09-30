@@ -14,7 +14,15 @@ describe('createPetSchema', () => {
       breed: null,
       dob: null,
       chip: null,
+      weightKg: null,
     });
+  });
+
+  it('accepts a weight in kg, rounded to one decimal place', () => {
+    expect(createPetSchema.parse({ name: 'B', species: 'Dog', weightKg: 12.345 }).weightKg).toBe(12.3);
+    expect(createPetSchema.safeParse({ name: 'B', species: 'Dog', weightKg: 0 }).success).toBe(false);
+    expect(createPetSchema.safeParse({ name: 'B', species: 'Dog', weightKg: 250 }).success).toBe(false);
+    expect(createPetSchema.safeParse({ name: 'B', species: 'Dog', weightKg: '12' }).success).toBe(false);
   });
 
   it('requires a 15-digit microchip', () => {
@@ -55,9 +63,21 @@ describe('vaccination schemas', () => {
     expect(createVaccinationSchema.parse({ type: 'Rabies', given: '2026-03-01' })).toEqual({
       type: 'Rabies',
       vet: null,
+      manufacturer: null,
+      lotNumber: null,
       given: '2026-03-01',
       expires: null,
     });
+  });
+
+  it('keeps the manufacturer and lot number when given', () => {
+    const v = createVaccinationSchema.parse({
+      type: 'DHP',
+      given: '2026-03-01',
+      manufacturer: ' Nobivac ',
+      lotNumber: 'A123B',
+    });
+    expect(v).toMatchObject({ manufacturer: 'Nobivac', lotNumber: 'A123B' });
   });
 
   it('checks dates in a patch only when both are sent', () => {
