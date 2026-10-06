@@ -55,6 +55,20 @@ it that way:
 
   Drop each override once Expo's own dependencies catch up.
 
+**Known, accepted:** `npm audit` reports 20 "high" findings, which all trace
+back to two advisories that have no patched release yet (checked 2026-10-06):
+
+- `braces` ≤ 3.0.3 (GHSA-vfj7-8cjw-p6xm): stack overflow on deeply nested glob
+  patterns. Reached only through Metro's file watcher, which matches the
+  project's own config globs.
+- `node-forge` ≤ 1.4.0 (GHSA-86w9-cpqp-85rv): RSA signature forgery with
+  low-exponent keys. Reached only through `@expo/cli`'s Expo Updates code
+  signing, which this app doesn't use.
+
+Both are dev-machine build tools that never ship in the app bundle. Ignore
+`npm audit fix --force`: it "fixes" them by downgrading to Expo 44. Re-check
+with `npm audit` and update normally once a patched version is published.
+
 ## How it's put together
 
 | Path | What |
