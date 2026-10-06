@@ -20,15 +20,23 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
+import {
+  AdminDeleteUserCommand,
+  AdminUserGlobalSignOutCommand,
+  CognitoIdentityProviderClient,
+  UserNotFoundException,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { PET, USER, VAX, event, parse, petItem, vaccinationItem } from './helpers.js';
 import { handler, routeKeys, routes } from '../src/api/index.js';
 
 const ddb = mockClient(DynamoDBDocumentClient);
 const s3 = mockClient(S3Client);
+const cognito = mockClient(CognitoIdentityProviderClient);
 
 beforeEach(() => {
   ddb.reset();
   s3.reset();
+  cognito.reset();
 });
 
 const call = async (...args: Parameters<typeof event>) => parse(await handler(event(...args)));
@@ -194,5 +202,45 @@ describe('photos', () => {
     expect(body.photoUpdatedAt).toBe('2026-09-26T00:00:00.000Z');
     expect(ddb.commandCalls(UpdateCommand)[0]!.args[0].input.UpdateExpression).toContain('photoUpdatedAt = :now');
     expect(s3.commandCalls(DeleteObjectCommand)[0]!.args[0].input.Key).toBe(oldKey);
+  });
+});
+
+describe('account', () => {
+  it('deletes all data, photos and the Cognito user, in that order', async () => {
+    const order: string[] = [];
+    s3.on(ListObjectsV2Command).callsFake(() => {
+      order.push('photos');
+      return { Contents: [{ Key: `users/${USER}/pets/${PET}/a.jpg` }] };
+    });
+    s3.on(DeleteObjectsCommand).resolves({});
+    ddb.on(QueryCommand).resolves({ Items: [petItem(), vaccinationItem()] });
+    ddb.on(BatchWriteCommand).callsFake(() => {
+      order.push('data');
+      return {};
+    });
+    cognito.on(AdminUserGlobalSignOutCommand).resolves({});
+    cognito.on(AdminDeleteUserCommand).callsFake(() => {
+      order.push('user');
+      return {};
+    });
+
+    const { statusCode } = await call('DELETE /account');
+
+    expect(statusCode).toBe(204);
+    expect(order).toEqual(['photos', 'data', 'user']);
+    const query = ddb.commandCalls(QueryCommand)[0]!.args[0].input;
+    expect(query.KeyConditionExpression).toBe('PK = :pk');
+    expect(s3.commandCalls(ListObjectsV2Command)[0]!.args[0].input.Prefix).toBe(`users/${USER}/`);
+    expect(cognito.commandCalls(AdminDeleteUserCommand)[0]!.args[0].input).toMatchObject({
+      UserPoolId: 'eu-west-2_test',
+      Username: USER,
+    });
+  });
+
+  it('succeeds if the Cognito user is already gone (safe to retry)', async () => {
+    s3.on(ListObjectsV2Command).resolves({});
+    ddb.on(QueryCommand).resolves({ Items: [] });
+    cognito.on(AdminUserGlobalSignOutCommand).rejects(new UserNotFoundException({ message: 'x', $metadata: {} }));
+    expect((await call('DELETE /account')).statusCode).toBe(204);
   });
 });

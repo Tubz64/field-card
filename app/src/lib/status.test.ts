@@ -11,6 +11,7 @@ const vax = (expires: string | null, given = '2026-01-01'): Vaccination => ({
   manufacturer: null,
   lotNumber: null,
   given,
+  validFrom: null,
   expires,
   createdAt: '',
   updatedAt: '',
@@ -25,6 +26,12 @@ describe('statusFor', () => {
     ['2026-10-29', 'good', 'Valid'],
   ])('expires %s -> %s', (expires, level, label) => {
     expect(statusFor({ expires }, TODAY)).toEqual({ level, label });
+  });
+
+  it('is amber until the valid-from date, then valid', () => {
+    const rabies = { expires: '2029-03-01', validFrom: '2026-10-10' };
+    expect(statusFor(rabies, TODAY)).toEqual({ level: 'amber', label: 'Valid in 12d' });
+    expect(statusFor(rabies, '2026-10-10')).toEqual({ level: 'good', label: 'Valid' });
   });
 
   it('counts days across a clock change without drifting', () => {

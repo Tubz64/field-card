@@ -109,6 +109,7 @@ export default function PetDetail() {
               <Text style={[styles.itemTitle, { color: colors.ink }]}>{v.type}</Text>
               <Body muted>
                 Given {formatDate(v.given)}
+                {v.validFrom ? ` · valid from ${formatDate(v.validFrom)}` : ''}
                 {v.vet ? ` · ${v.vet}` : ''}
                 {v.expires ? ` · expires ${formatDate(v.expires)}` : ''}
               </Body>

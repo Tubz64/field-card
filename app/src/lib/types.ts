@@ -14,6 +14,8 @@ export interface Vaccination {
   /** Batch / lot number from the vaccine sticker. */
   lotNumber: string | null;
   given: string; // YYYY-MM-DD
+  /** Pet passport "valid from" (YYYY-MM-DD); for a first rabies jab, 21 days after `given`. */
+  validFrom: string | null;
   expires: string | null; // YYYY-MM-DD
   createdAt: string;
   updatedAt: string;
@@ -56,6 +58,7 @@ export interface VaccinationInput {
   manufacturer: string;
   lotNumber: string;
   given: string;
+  validFrom: string;
   expires: string;
 }
 

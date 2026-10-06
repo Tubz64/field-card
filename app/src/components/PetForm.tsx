@@ -6,6 +6,7 @@ import { localTodayIso } from '../lib/format';
 import { pickPhoto } from '../lib/photo';
 import { SPECIES, type Pet, type PetSave, type Species } from '../lib/types';
 import { fonts, useColors } from '../theme';
+import { BreedField } from './BreedField';
 import { DateField } from './fields';
 import { PetPhoto } from './PetPhoto';
 import { Banner, Button, Choice, Field } from './ui';
@@ -76,7 +77,7 @@ export function PetForm({
 
       <Field label="Pet name" value={name} onChangeText={setName} error={show('name')} autoCapitalize="words" />
       <Choice label="Species" options={SPECIES} value={species} onChange={setSpecies} />
-      <Field label="Breed" value={breed} onChangeText={setBreed} placeholder="Optional" autoCapitalize="words" />
+      <BreedField species={species} value={breed} onChange={setBreed} />
       <DateField
         label="Date of birth"
         initialIso={pet?.dob}

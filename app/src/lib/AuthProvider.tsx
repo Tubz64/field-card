@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
+import { api } from './api';
 import * as auth from './auth';
 import { hydrateTokenStorage } from './tokenStorage';
 
@@ -11,6 +12,9 @@ interface AuthState {
   pendingChallenge: { user: CognitoUser } | null;
   signIn(email: string, password: string): Promise<'signed-in' | 'new-password-required'>;
   completeNewPassword(newPassword: string): Promise<void>;
+  updateName(givenName: string, familyName: string): Promise<void>;
+  /** Deletes the account and all its data on the server, then signs out locally. */
+  deleteAccount(): Promise<void>;
   signOut(): void;
 }
 
@@ -48,15 +52,25 @@ export function AuthProvider({ children, onSignOut }: { children: ReactNode; onS
     [pendingChallenge],
   );
 
+  const updateName = useCallback(async (givenName: string, familyName: string) => {
+    await auth.updateName(givenName, familyName);
+    setProfile(auth.currentProfile());
+  }, []);
+
   const signOut = useCallback(() => {
     auth.signOut();
     setProfile(null);
     onSignOut();
   }, [onSignOut]);
 
+  const deleteAccount = useCallback(async () => {
+    await api.deleteAccount();
+    signOut();
+  }, [signOut]);
+
   const value = useMemo(
-    () => ({ ready, profile, pendingChallenge, signIn, completeNewPassword, signOut }),
-    [ready, profile, pendingChallenge, signIn, completeNewPassword, signOut],
+    () => ({ ready, profile, pendingChallenge, signIn, completeNewPassword, updateName, deleteAccount, signOut }),
+    [ready, profile, pendingChallenge, signIn, completeNewPassword, updateName, deleteAccount, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -63,6 +63,9 @@ export const api = {
     return request<Pet>('PUT', `/pets/${petId}/photo`, { key: upload.key });
   },
   removePhoto: (petId: string) => request<void>('DELETE', `/pets/${petId}/photo`),
+
+  /** Permanently deletes the account, all pets, vaccinations and photos. */
+  deleteAccount: () => request<void>('DELETE', '/account'),
 };
 
 /** First validation message for a field, if the API rejected it. */

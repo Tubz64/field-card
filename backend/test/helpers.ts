@@ -6,6 +6,7 @@ export const VAX = 'ffffffff-0000-1111-2222-333333333333';
 
 process.env.TABLE_NAME = 'pawpers-test';
 process.env.PHOTOS_BUCKET = 'pawpers-test-photos';
+process.env.USER_POOL_ID = 'eu-west-2_test';
 process.env.AWS_REGION = 'eu-west-2';
 process.env.AWS_ACCESS_KEY_ID = 'test';
 process.env.AWS_SECRET_ACCESS_KEY = 'test';

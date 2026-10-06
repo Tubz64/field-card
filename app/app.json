@@ -28,7 +28,13 @@
       "expo-status-bar",
       "expo-image",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#3F5344"
+        }
+      ]
     ],
     "scheme": "pawpers"
   }

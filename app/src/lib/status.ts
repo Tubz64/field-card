@@ -38,10 +38,14 @@ function monthsBetween(from: string, to: string): number {
   return (ty! - fy!) * 12 + (tm! - fm!) - (td! < fd! ? 1 : 0);
 }
 
-export function statusFor(v: Pick<Vaccination, 'expires'>, today: string): Status {
+export function statusFor(v: Pick<Vaccination, 'expires'> & { validFrom?: string | null }, today: string): Status {
+  if (v.expires && daysBetween(today, v.expires) < 0) return { level: 'red', label: 'Expired' };
+  // Not yet valid (e.g. within 21 days of a first rabies vaccination): doesn't count for travel yet.
+  if (v.validFrom && daysBetween(today, v.validFrom) > 0) {
+    return { level: 'amber', label: `Valid in ${daysBetween(today, v.validFrom)}d` };
+  }
   if (!v.expires) return { level: 'none', label: 'No expiry set' };
   const days = daysBetween(today, v.expires);
-  if (days < 0) return { level: 'red', label: 'Expired' };
   if (days === 0) return { level: 'amber', label: 'Expires today' };
   if (days <= DUE_SOON_DAYS) return { level: 'amber', label: `${days}d left` };
   return { level: 'good', label: 'Valid' };

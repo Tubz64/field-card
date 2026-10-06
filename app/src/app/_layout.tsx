@@ -1,7 +1,8 @@
 // Must load before amazon-cognito-identity-js: SRP needs crypto.getRandomValues.
 import 'react-native-get-random-values';
 import { useCallback, useEffect } from 'react';
-import { SplashScreen, Stack } from 'expo-router';
+import { SplashScreen, Stack, router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { Fraunces_500Medium } from '@expo-google-fonts/fraunces/500Medium';
@@ -12,6 +13,7 @@ import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { SignedOutError } from '../lib/auth';
 import { AuthProvider, useAuth } from '../lib/AuthProvider';
+import { cancelReminders, remindersSupported } from '../lib/notifications';
 import { OFFLINE_MAX_AGE, persister, queryClient } from '../lib/queries';
 import { fonts, useColors } from '../theme';
 
@@ -26,10 +28,11 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
 
-  // Signing out wipes the offline cache so the next user sees nothing of it.
+  // Signing out wipes the offline cache and reminders so the next user sees nothing of them.
   const clearCache = useCallback(() => {
     queryClient.clear();
     void persister.removeClient();
+    void cancelReminders();
   }, []);
 
   return (
@@ -67,6 +70,18 @@ function Navigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     };
   }, [signOut]);
 
+  // Tapping an expiry reminder opens that pet (including from a cold start).
+  useEffect(() => {
+    if (!remindersSupported) return;
+    const open = (response: Notifications.NotificationResponse | null) => {
+      const url = response?.notification.request.content.data?.url;
+      if (typeof url === 'string' && url.startsWith('/pets/')) router.push(url as never);
+    };
+    void Notifications.getLastNotificationResponseAsync().then(open);
+    const sub = Notifications.addNotificationResponseReceivedListener(open);
+    return () => sub.remove();
+  }, []);
+
   if (!loaded) return null;
   const signedIn = profile !== null;
 
@@ -84,6 +99,7 @@ function Navigator({ fontsLoaded }: { fontsLoaded: boolean }) {
       >
         <Stack.Protected guard={signedIn}>
           <Stack.Screen name="index" options={{ title: 'Pawpers' }} />
+          <Stack.Screen name="profile" options={{ title: 'Profile' }} />
           <Stack.Screen name="pets/new" options={{ title: 'Add a pet', presentation: 'modal' }} />
           <Stack.Screen name="pets/[id]/index" options={{ title: '' }} />
           <Stack.Screen name="pets/[id]/edit" options={{ title: 'Edit pet', presentation: 'modal' }} />

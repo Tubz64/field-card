@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
+import { syncReminders } from '../lib/notifications';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PetPhoto } from '../components/PetPhoto';
 import { Badge, Banner, Body, Button, Card, Loading, Screen } from '../components/ui';
@@ -9,18 +11,23 @@ import { localToday, overallStatus } from '../lib/status';
 import { fonts, useColors } from '../theme';
 
 export default function PetList() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const colors = useColors();
   const { data: pets, error, isPending, isRefetching, refetch, dataUpdatedAt } = usePets();
   const today = localToday();
+
+  // Keep expiry reminders in step with the records whenever they change.
+  useEffect(() => {
+    if (pets) void syncReminders(pets).catch((err) => console.warn('Could not schedule reminders', err));
+  }, [pets]);
 
   return (
     <>
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Pressable onPress={signOut} hitSlop={8}>
-              <Text style={{ color: colors.moss, fontFamily: fonts.sansMedium }}>Sign out</Text>
+            <Pressable onPress={() => router.push('/profile')} hitSlop={8} accessibilityRole="button">
+              <Text style={{ color: colors.moss, fontFamily: fonts.sansMedium }}>Profile</Text>
             </Pressable>
           ),
         }}

@@ -70,6 +70,29 @@ it that way:
 `expo-image`, keyed on the upload time) are available with no connection.
 Changes need a connection.
 
+**Expiry reminders** (`src/lib/reminders.ts`, `notifications.ts`) are local
+notifications, so they work in Expo Go. They fire 30 days before, 7 days
+before and on the day a vaccination expires, at 9am, for the latest
+vaccination of each type. They're rescheduled whenever the records change,
+and cancelled on sign-out. Permission is asked for the first time there's
+something to remind about. Phones only (there's no web support). They can
+be turned off in Profile.
+
+**Profile** (`src/app/profile.tsx`): edit name, change password, reminders
+on/off, sign out, and **delete account**. Deleting calls `DELETE /account`,
+which removes all data, photos and the Cognito user. Apple requires in-app
+account deletion, and it covers the UK GDPR right to erasure.
+
+**Breeds**: `src/data/breeds.json` is bundled, so suggestions work offline.
+It's built from Wikidata (CC0): dog breeds with an FCI number or an AKC ID,
+all cat and rabbit breeds, plus common UK crossbreeds (Cockapoo, Cavapoo,
+etc.). Any text is still allowed. To refresh it, run
+`node scripts/build-breeds.mjs` and commit the result.
+
+**Rabies "valid from"**: shown when the vaccine is rabies. Until that date
+the vaccination shows amber ("Valid in 12d"), as groundwork for the travel
+checker.
+
 **Photos** can be added in the add/edit pet form, or by tapping the photo on
 a pet's page. They're cropped square and resized to 800 px JPEG on the
 device, then uploaded straight to S3 with the presigned POST from the API.

@@ -145,6 +145,44 @@ export function getAccessToken(): Promise<string> {
   );
 }
 
+/** The current user with a live session attached (needed for self-service calls). */
+function sessionUser(): Promise<CognitoUser> {
+  const user = userPool().getCurrentUser();
+  if (!user) return Promise.reject(new SignedOutError());
+  return new Promise((resolve, reject) =>
+    user.getSession((err: Error | null, session: CognitoUserSession | null) =>
+      err || !session ? reject(isAuthFailure(err) ? new SignedOutError() : err) : resolve(user),
+    ),
+  );
+}
+
+export async function updateName(givenName: string, familyName: string): Promise<void> {
+  const user = await sessionUser();
+  await new Promise<void>((resolve, reject) =>
+    user.updateAttributes(
+      [
+        new CognitoUserAttribute({ Name: 'given_name', Value: givenName.trim() }),
+        new CognitoUserAttribute({ Name: 'family_name', Value: familyName.trim() }),
+      ],
+      (err) => (err ? reject(err) : resolve()),
+    ),
+  );
+  // Fetch a fresh ID token so the stored profile shows the new name.
+  const refreshToken = user.getSignInUserSession()?.getRefreshToken();
+  if (refreshToken) {
+    await new Promise<void>((resolve, reject) =>
+      user.refreshSession(refreshToken, (err: Error | null) => (err ? reject(err) : resolve())),
+    );
+  }
+}
+
+export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
+  const user = await sessionUser();
+  await new Promise<void>((resolve, reject) =>
+    user.changePassword(oldPassword, newPassword, (err) => (err ? reject(err) : resolve())),
+  );
+}
+
 export function signOut(): void {
   userPool().getCurrentUser()?.signOut();
   tokenStorage.clear();

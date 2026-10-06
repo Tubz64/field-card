@@ -10,6 +10,7 @@ import { randomBytes } from 'node:crypto';
 import {
   AdminCreateUserCommand,
   AdminDeleteUserCommand,
+  AdminGetUserCommand,
   AdminSetUserPasswordCommand,
   CognitoIdentityProviderClient,
   ListUserPoolClientsCommand,
@@ -241,10 +242,15 @@ async function run() {
         expires: '2029-03-01',
         manufacturer: 'Nobivac',
         lotNumber: 'E2E-LOT-1',
+        validFrom: '2026-03-22',
       });
       expect(
-        r.status === 201 && r.body.id && r.body.manufacturer === 'Nobivac' && r.body.lotNumber === 'E2E-LOT-1',
-        'expected 201 vaccination with manufacturer and lot number',
+        r.status === 201 &&
+          r.body.id &&
+          r.body.manufacturer === 'Nobivac' &&
+          r.body.lotNumber === 'E2E-LOT-1' &&
+          r.body.validFrom === '2026-03-22',
+        'expected 201 vaccination with manufacturer, lot number and valid-from',
         r,
       );
       vaccinationId = r.body.id;
@@ -321,12 +327,30 @@ async function run() {
       const get = await api('GET', `/pets/${petId}`);
       expect(del.status === 204 && get.status === 404, 'expected deleted', [del.status, get.status]);
     });
+
+    await step('deletes an account with all its data and the Cognito user', async () => {
+      const pet = await bobApi('POST', '/pets', { name: 'E2E Bob Dog', species: 'Dog' });
+      expect(pet.status === 201, 'expected bob pet', pet);
+      const del = await bobApi('DELETE', '/account');
+      expect(del.status === 204, 'expected 204', del);
+      const gone = await cognito
+        .send(new AdminGetUserCommand({ UserPoolId: poolId, Username: bob.email }))
+        .then(() => false)
+        .catch((e: { name?: string }) => e.name === 'UserNotFoundException');
+      expect(gone, 'expected Cognito user to be deleted');
+      // The access token stays valid until it expires, so this also proves the data is gone.
+      const list = await bobApi('GET', '/pets');
+      expect(list.status === 200 && list.body.pets.length === 0, 'expected no data left', list);
+    });
   } finally {
     for (const c of cleanups) await c().catch((e) => console.warn('cleanup failed:', e));
     for (const u of users) {
       await cognito
         .send(new AdminDeleteUserCommand({ UserPoolId: poolId, Username: u.email }))
-        .catch((e) => console.warn(`could not delete ${u.email}:`, e));
+        .catch((e: { name?: string }) => {
+          // Already removed by the delete-account step.
+          if (e.name !== 'UserNotFoundException') console.warn(`could not delete ${u.email}:`, e);
+        });
     }
     console.log(`\nCleaned up ${users.length} test user(s).`);
   }
