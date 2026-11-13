@@ -6,6 +6,7 @@
   "build": {
     "preview": {
       "environment": "preview",
+      "node": "24.21.0",
       "distribution": "internal",
       "android": {
         "buildType": "apk"
