@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "uk.co.pawpers.app",
       "adaptiveIcon": {
         "backgroundColor": "#EEE9DC",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -36,6 +37,13 @@
         }
       ]
     ],
-    "scheme": "pawpers"
+    "scheme": "pawpers",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2ebfa4ec-54b2-418d-a576-871a3d5667d8"
+      }
+    },
+    "owner": "tubz64s-team"
   }
 }
