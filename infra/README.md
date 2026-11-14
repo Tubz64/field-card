@@ -3,6 +3,7 @@
 | Path | What | Applied by |
 |---|---|---|
 | `bootstrap/` | State bucket, GitHub OIDC + CI roles, GitHub repo settings | Hand, once (see its README) |
+| `org/` | AWS Organization: `pawpers-dev`/`pawpers-prod` accounts, guardrail SCP, centralised root access | Hand, from the management account (see its README) |
 | `modules/auth` | Cognito user pool + Expo app client | via envs |
 | `modules/database` | DynamoDB single table (`PK`/`SK`) | via envs |
 | `modules/photos` | Private S3 bucket for pet photos | via envs |
