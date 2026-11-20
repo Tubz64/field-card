@@ -72,7 +72,10 @@ Decisions:
 - `infra/org` (applied by hand from the management account 455967503530):
   the existing AWS Organization (imported), a `workloads` OU, the
   `pawpers-dev`/`pawpers-prod` accounts, a guardrail SCP (no leaving the
-  organisation; eu-west-2 + us-east-1 only) and centralised root access.
+  organisation; eu-west-2 + us-east-1 only), centralised root access, and
+  IAM Identity Center (eu-west-2; `pawpers-admin`/`pawpers-read-only`
+  permission sets for the `pawpers-admins` group on every account).
+  dev = 427155357656, prod = 341341093645.
   Account emails are in the gitignored `terraform.tfvars` because the repo is
   public. Migration of the stacks into the new accounts is in progress (see
   `infra/org/README.md`, "Next steps").

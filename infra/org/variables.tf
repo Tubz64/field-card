@@ -38,3 +38,14 @@ variable "allowed_regions" {
   type        = list(string)
   default     = ["eu-west-2", "us-east-1"]
 }
+
+# Set in terraform.tfvars (gitignored); the repo is public.
+variable "sso_admin" {
+  description = "The Identity Center user who gets admin and read-only access to every account. user_name is what you type at the access portal."
+  type = object({
+    user_name   = string
+    email       = string
+    given_name  = string
+    family_name = string
+  })
+}

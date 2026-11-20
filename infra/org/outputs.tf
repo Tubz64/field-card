@@ -7,3 +7,8 @@ output "workloads_ou_id" {
   description = "ID of the OU holding the workload accounts."
   value       = aws_organizations_organizational_unit.workloads.id
 }
+
+output "sso_portal_url" {
+  description = "Sign-in URL for the Identity Center access portal."
+  value       = "https://${local.identity_store_id}.awsapps.com/start"
+}

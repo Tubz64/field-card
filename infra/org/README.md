@@ -10,6 +10,7 @@ Applied by hand: CI's roles are deliberately unable to touch Organizations.
 | `pawpers-dev`, `pawpers-prod` accounts | Created inside the organisation: no root password, no card, billing rolls up to management |
 | `pawpers-guardrails` SCP | On the `workloads` OU: can't leave the organisation, and only `eu-west-2` + `us-east-1` (global services exempt) |
 | Centralised root access | Member accounts have no root credentials. Root tasks use a short-lived `aws sts assume-root` session from management |
+| IAM Identity Center | `pawpers-admin` (4h) and `pawpers-read-only` (12h) permission sets, a `pawpers-admins` group and its user, assigned to every account |
 
 Everything is `prevent_destroy`, and accounts have `close_on_deletion = false`.
 Closing an account is a deliberate manual step, and its email can never be
@@ -26,35 +27,43 @@ terraform apply tfplan
 terraform output account_ids
 ```
 
-Account creation takes a minute or two per account. The emails get a welcome
-message from AWS. There's no password to set.
+Account creation takes a minute or two per account. There's no password to
+set, and AWS may not send a welcome email to the new accounts' addresses.
 
-## Getting into the new accounts
+| Account | ID |
+|---|---|
+| `pawpers-dev` | 427155357656 |
+| `pawpers-prod` | 341341093645 |
 
-Until IAM Identity Center is set up, assume the role AWS creates in each
-account, from the management account:
+## Signing in (Identity Center)
 
-```bash
-aws sts assume-role \
-  --role-arn arn:aws:iam::<account-id>:role/OrganizationAccountAccessRole \
-  --role-session-name toby
-```
+The organisation instance (eu-west-2) was enabled once in the console. AWS has
+no API for that step. Everything else is in `identity_center.tf`.
 
-Or add a profile to `~/.aws/config`:
+Access portal: `terraform output sso_portal_url`.
 
-```ini
-[profile pawpers-dev]
-role_arn       = arn:aws:iam::<dev-account-id>:role/OrganizationAccountAccessRole
-source_profile = default
-region         = eu-west-2
-```
+**First sign-in.** Users created by API don't get an invitation email by
+default. Either:
+
+- In IAM Identity Center go to Settings → Authentication → Standard
+  authentication, and turn on **"Send email OTP for users created from API"**,
+  or
+- go to Users → the user → **Reset password** → "Send an email to the user".
+
+Then set a password and register MFA.
+
+**CLI.** Configure it with `aws configure sso`: use the portal URL, region
+`eu-west-2`, and one profile per account/role, e.g. `pawpers-dev-admin`. Then
+`aws sso login --profile pawpers-dev-admin`.
+
+**Fallback.** From management credentials, assume
+`arn:aws:iam::<account-id>:role/OrganizationAccountAccessRole`, the role AWS
+creates in every account the organisation makes.
 
 ## Next steps (follow-up PRs)
 
-1. **IAM Identity Center:** enable the organisation instance in the console
-   (the one click that can't be done by API). Then permission sets, a user and
-   account assignments go in this config. That replaces the long-lived IAM
-   user keys on the management account.
+1. Once the portal works, delete the long-lived access keys on the management
+   account's `toby` IAM user, and use `aws sso login` instead.
 2. Bootstrap `pawpers-dev` and `pawpers-prod`: state bucket, GitHub OIDC and CI
    roles in each, and repoint the GitHub environments.
 3. Redeploy the stacks into the new accounts, then tear down the old ones in
