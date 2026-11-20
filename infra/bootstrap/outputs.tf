@@ -20,3 +20,15 @@ output "deploy_role_arn" {
   description = "Set as GitHub repo variable AWS_DEPLOY_ROLE_ARN."
   value       = aws_iam_role.gha_deploy.arn
 }
+
+output "workload_accounts" {
+  description = "Per-account state bucket and CI role ARNs, keyed by environment."
+  value = {
+    for env, m in { dev = module.account_dev, prod = module.account_prod } : env => {
+      account_id        = m.account_id
+      state_bucket      = m.state_bucket
+      plan_role_arn     = m.plan_role_arn
+      deploy_role_arn   = m.deploy_role_arn
+    }
+  }
+}

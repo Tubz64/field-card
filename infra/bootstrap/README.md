@@ -14,6 +14,32 @@ token (see step 3). It creates the pieces that CI needs before CI can run:
 
 After this, all other infrastructure is deployed by GitHub Actions.
 
+## Workload accounts (`workload_accounts.tf`)
+
+The same config also bootstraps `pawpers-dev` (427155357656) and `pawpers-prod`
+(341341093645), the accounts created in `infra/org`. It uses the
+`modules/account-bootstrap` module and reaches each account through
+`OrganizationAccountAccessRole`. Each account gets its own:
+
+| Resource | Name |
+|---|---|
+| State bucket | `pawpers-tfstate-<account-id>` |
+| GitHub OIDC provider | `token.actions.githubusercontent.com` |
+| Plan role (any PR, read-only) | `pawpers-gha-plan` |
+| Deploy role (only its own GitHub environment: `dev` or `prod`) | `pawpers-gha-deploy` |
+| Budget (`workload_monthly_budget_usd`, default $10) | `pawpers-monthly` |
+
+So a dev deploy job can't get prod credentials, and each environment's state
+sits in its own account. `terraform output workload_accounts` lists the bucket
+and role ARNs.
+
+Run with management-account credentials (`AWS_PROFILE=mgmt-admin`) plus
+`GITHUB_TOKEN` as below.
+
+**Migration in progress:** CI still uses the management account's bucket and
+roles above until the envs are moved to the workload accounts. After that,
+the management-account CI pieces get removed.
+
 ## 1. Apply (local state)
 
 ```bash
