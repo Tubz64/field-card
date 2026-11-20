@@ -63,3 +63,18 @@ variable "budget_alert_emails" {
   type        = list(string)
   default     = []
 }
+
+variable "workload_account_ids" {
+  description = "Account IDs of the workload accounts created by infra/org, keyed by environment."
+  type        = map(string)
+  default = {
+    dev  = "427155357656"
+    prod = "341341093645"
+  }
+}
+
+variable "workload_monthly_budget_usd" {
+  description = "Monthly cost budget for each workload account, in USD."
+  type        = number
+  default     = 10
+}
