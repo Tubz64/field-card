@@ -4,3 +4,10 @@ account_emails = {
   dev  = "you+pawpers-dev@example.com"
   prod = "you+pawpers-prod@example.com"
 }
+
+sso_admin = {
+  user_name   = "you"
+  email       = "you@example.com"
+  given_name  = "First"
+  family_name = "Last"
+}
