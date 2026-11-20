@@ -23,6 +23,7 @@ updates:
   - package-ecosystem: terraform
     directories:
       - /infra/bootstrap
+      - /infra/org
       - /infra/envs/*
     target-branch: development
     schedule:

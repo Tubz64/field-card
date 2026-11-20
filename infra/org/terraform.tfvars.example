@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars (gitignored). Each address must never have been
+# used by another AWS account, closed ones included.
+account_emails = {
+  dev  = "you+pawpers-dev@example.com"
+  prod = "you+pawpers-prod@example.com"
+}

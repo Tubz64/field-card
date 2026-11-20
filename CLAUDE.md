@@ -69,6 +69,13 @@ Decisions:
 - No existing user data to migrate: prototype localStorage held test data only.
 
 ## Infra & CI (built)
+- `infra/org` (applied by hand from the management account 455967503530):
+  the existing AWS Organization (imported), a `workloads` OU, the
+  `pawpers-dev`/`pawpers-prod` accounts, a guardrail SCP (no leaving the
+  organisation; eu-west-2 + us-east-1 only) and centralised root access.
+  Account emails are in the gitignored `terraform.tfvars` because the repo is
+  public. Migration of the stacks into the new accounts is in progress (see
+  `infra/org/README.md`, "Next steps").
 - `infra/envs/{dev,prod}`: per-env Terraform roots, state at
   `envs/<env>/terraform.tfstate` in the state bucket. Terraform `~> 1.16`
   (bootstrap stays on `~> 1.14`), AWS provider `~> 6.66`. Provider lock
