@@ -116,6 +116,37 @@ resource "github_repository_ruleset" "deploy_branch" {
 # these values are sensitive.
 # ---------------------------------------------------------------------------
 
+# Per-environment CI roles. dev has moved to its own account; prod still uses
+# the management account's roles until it moves too (then switch it to
+# module.account_prod and drop the legacy variables above).
+locals {
+  ci_roles = {
+    DEV = {
+      plan   = module.account_dev.plan_role_arn
+      deploy = module.account_dev.deploy_role_arn
+    }
+    PROD = {
+      plan   = aws_iam_role.gha_plan.arn
+      deploy = aws_iam_role.gha_deploy.arn
+    }
+  }
+}
+
+resource "github_actions_variable" "ci_role" {
+  for_each = merge([
+    for env, roles in local.ci_roles : {
+      "AWS_PLAN_ROLE_ARN_${env}"   = roles.plan
+      "AWS_DEPLOY_ROLE_ARN_${env}" = roles.deploy
+    }
+  ]...)
+
+  repository    = local.github_repo_name
+  variable_name = each.key
+  value         = each.value
+}
+
+# Legacy single-account variables. Still read by the copy of the workflows on
+# the production branch, so keep them until that branch has the per-env ones.
 resource "github_actions_variable" "this" {
   for_each = {
     AWS_REGION          = var.region

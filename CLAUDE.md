@@ -33,13 +33,22 @@ Decisions:
   - DynamoDB, single table (user → pets → vaccinations).
   - S3 for pet photos (later: scanned certificates), uploaded via presigned
     URLs. Photos are no longer stored as base64 inside the record.
-- AWS: account 455967503530, region **eu-west-2** (London).
+- AWS: region **eu-west-2** (London). AWS Organization with management
+  account 455967503530 (org, billing, domain, Identity Center only),
+  `pawpers-dev` 427155357656 and `pawpers-prod` 341341093645. dev has moved
+  to its own account; prod still runs in the management account until it
+  moves too. Local CLI uses Identity Center profiles (`aws sso login --sso-session
+  pawpers`; `mgmt-admin`, `pawpers-dev-admin`, `pawpers-prod-admin`), so run
+  scripts like `npm run configure` / `dev:delete-user` with
+  `AWS_PROFILE=pawpers-dev-admin`.
 - Test against a real deployed `dev` stack rather than local AWS emulation.
 - **Automate everything** — no click-ops, no long-lived AWS keys:
   - Terraform remote state in S3 with native S3 locking (`use_lockfile`, no
     DynamoDB lock table). Pin the Terraform and AWS provider versions to the
     latest releases at scaffold time, and bump them deliberately.
-  - `infra/bootstrap` (applied once by hand, see its README) creates the
+  - `infra/bootstrap` (applied by hand, see its README; per-account copies for
+    dev/prod via `modules/account-bootstrap`, CI roles chosen per env through
+    `AWS_{PLAN,DEPLOY}_ROLE_ARN_{DEV,PROD}` variables) creates the
     state bucket `pawpers-tfstate-455967503530`, the account's GitHub OIDC
     provider, and two CI roles: `pawpers-gha-plan` (read-only, PRs) and
     `pawpers-gha-deploy` (GitHub environments only). The OIDC provider is

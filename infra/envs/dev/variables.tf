@@ -19,7 +19,7 @@ variable "region" {
 variable "aws_account_id" {
   description = "The only AWS account this config may touch (guards against applying with the wrong credentials)."
   type        = string
-  default     = "455967503530"
+  default     = "427155357656" # pawpers-dev (infra/org)
 }
 
 variable "github_repo" {
